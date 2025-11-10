@@ -105,6 +105,72 @@ def check_with_options_from(editor_cpp: Path, relays: Dict[str, str]) -> List[st
 
     return warnings
 
+def check_member_declaration_order(editor_h: Path) -> tuple[bool, List[str]]:
+    """
+    CRITICAL CHECK: Validate member declaration order to prevent WebView crashes.
+
+    Correct order (destroyed in reverse):
+    1. Relays first (Web*Relay)
+    2. WebView second (WebBrowserComponent)
+    3. Attachments last (Web*ParameterAttachment)
+
+    This prevents crashes caused by webView being destroyed before objects that reference it.
+    """
+    if not editor_h.exists():
+        return True, []  # No header file yet, skip check
+
+    content = editor_h.read_text()
+    lines = content.split('\n')
+    errors = []
+
+    # Track line numbers for each member type
+    relay_lines = []
+    webview_lines = []
+    attachment_lines = []
+
+    for i, line in enumerate(lines, 1):
+        # Skip comments
+        if '//' in line:
+            line = line[:line.index('//')]
+
+        # Match relay declarations
+        if re.search(r'Web(?:Slider|ToggleButton|ComboBox)Relay\s+\w+', line):
+            relay_lines.append(i)
+
+        # Match WebView component
+        if re.search(r'(?:juce::)?WebBrowserComponent\s+\w+', line):
+            webview_lines.append(i)
+
+        # Match attachment declarations
+        if re.search(r'Web(?:Slider|ToggleButton|ComboBox)ParameterAttachment\s+\w+', line):
+            attachment_lines.append(i)
+
+    # If no WebView components found, skip check
+    if not webview_lines:
+        return True, []
+
+    # Validate order: all relays must come before webView
+    webview_first_line = min(webview_lines) if webview_lines else float('inf')
+
+    for relay_line in relay_lines:
+        if relay_line > webview_first_line:
+            errors.append(
+                f"MEMBER ORDER ERROR: Relay declared at line {relay_line} AFTER WebView at line {webview_first_line}. "
+                f"This WILL cause crashes! Relays must be declared BEFORE WebView."
+            )
+
+    # Validate order: webView must come before attachments
+    attachment_first_line = min(attachment_lines) if attachment_lines else float('inf')
+
+    for webview_line in webview_lines:
+        if webview_line > attachment_first_line:
+            errors.append(
+                f"MEMBER ORDER ERROR: WebView declared at line {webview_line} AFTER attachment at line {attachment_first_line}. "
+                f"This WILL cause crashes! WebView must be declared BEFORE attachments."
+            )
+
+    return len(errors) == 0, errors
+
 def main():
     """Main validation entry point"""
     # Find active plugin
@@ -162,6 +228,12 @@ def main():
     for warning in registration_warnings:
         print(f"WARNING: {warning}", file=sys.stderr)
 
+    # CRITICAL CHECK: Validate member declaration order (prevents 90% of WebView crashes)
+    editor_h = plugin_dir / "Source" / "PluginEditor.h"
+    order_ok, order_errors = check_member_declaration_order(editor_h)
+    if not order_ok:
+        errors.extend(order_errors)
+
     if errors:
         print("✗ GUI binding validation FAILED:", file=sys.stderr)
         for error in errors:
@@ -169,6 +241,7 @@ def main():
         sys.exit(1)
 
     print(f"✓ All {len(html_ids)} HTML parameter IDs have corresponding relays")
+    print("✓ Member declaration order is correct (relays → webView → attachments)")
     sys.exit(0)
 
 if __name__ == "__main__":

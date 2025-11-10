@@ -33,14 +33,33 @@ def parse_parameter_spec(spec_path: Path) -> Dict[str, Dict]:
     content = spec_path.read_text()
     parameters = {}
 
-    # Match parameter definitions in markdown table format
+    # Format 1: Markdown table format
     # Format: | paramID | Type | Range | Default | ...
-    param_pattern = r'\|\s*(\w+)\s*\|\s*(Float|Bool|Choice)\s*\|'
-
-    for match in re.finditer(param_pattern, content):
+    table_pattern = r'\|\s*(\w+)\s*\|\s*(Float|Bool|Choice)\s*\|'
+    for match in re.finditer(table_pattern, content):
         param_id = match.group(1)
         param_type = match.group(2)
         parameters[param_id] = {"type": param_type}
+
+    # Format 2: Section-based format (e.g., "### paramID" followed by "- **Type:** Float")
+    # This format is used when parameters have detailed descriptions
+    section_pattern = r'^###\s+(\w+)\s*$'
+    type_pattern = r'^\s*-\s*\*\*Type:\*\*\s*(Float|Bool|Choice)'
+
+    lines = content.split('\n')
+    current_param = None
+
+    for i, line in enumerate(lines):
+        # Check for parameter section heading
+        section_match = re.match(section_pattern, line)
+        if section_match:
+            current_param = section_match.group(1)
+            # Look ahead for type in next few lines
+            for j in range(i + 1, min(i + 10, len(lines))):
+                type_match = re.match(type_pattern, lines[j])
+                if type_match:
+                    parameters[current_param] = {"type": type_match.group(1)}
+                    break
 
     return parameters
 
