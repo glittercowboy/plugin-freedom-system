@@ -179,10 +179,23 @@ You ARE checking:
 }
 ```
 
-### Stub Stages (2-5) - Phase 2
+### Stage 2: Foundation Validation
 
-During Phase 2, Stages 2-5 are stubs. Validator should acknowledge this:
+**Expected Inputs:**
+- `plugins/[PluginName]/CMakeLists.txt`
+- `plugins/[PluginName]/Source/PluginProcessor.{h,cpp}`
+- `plugins/[PluginName]/Source/PluginEditor.{h,cpp}`
+- `plugins/[PluginName]/.ideas/architecture.md`
 
+**Semantic Checks (hooks already validated patterns exist):**
+- ✓ CMakeLists.txt uses appropriate JUCE modules for plugin type?
+- ✓ Plugin format configuration matches creative brief (VST3/AU/Standalone)?
+- ✓ JUCE 8 patterns used (ParameterID with version 1)?
+- ✓ PluginProcessor inherits correctly from AudioProcessor?
+- ✓ Editor/processor relationship properly established?
+- ✓ Code organization follows JUCE best practices?
+
+**Example Report:**
 ```json
 {
   "agent": "validator",
@@ -190,13 +203,193 @@ During Phase 2, Stages 2-5 are stubs. Validator should acknowledge this:
   "status": "PASS",
   "checks": [
     {
-      "name": "stub_stage",
+      "name": "juce_modules",
       "passed": true,
-      "message": "Stage 2 is a stub in Phase 2 - implementation in Phase 3",
+      "message": "CMakeLists.txt includes juce_audio_basics, juce_audio_processors for audio plugin",
+      "severity": "info"
+    },
+    {
+      "name": "plugin_formats",
+      "passed": true,
+      "message": "VST3 and AU formats enabled as specified in brief",
+      "severity": "info"
+    },
+    {
+      "name": "juce8_patterns",
+      "passed": true,
+      "message": "ParameterID uses version 1 format",
       "severity": "info"
     }
   ],
-  "recommendation": "Stub stage acknowledged, continue to next stage",
+  "recommendation": "Foundation follows JUCE 8 best practices",
+  "continue_to_next_stage": true
+}
+```
+
+### Stage 3: Shell Validation
+
+**Expected Inputs:**
+- `plugins/[PluginName]/Source/PluginProcessor.cpp` (with APVTS)
+- `plugins/[PluginName]/.ideas/parameter-spec.md`
+
+**Semantic Checks (hooks verified parameters exist):**
+- ✓ Parameter ranges appropriate for audio use (not arbitrary)?
+- ✓ Default values sensible for typical use?
+- ✓ Parameter smoothing strategy appropriate for parameter types?
+- ✓ APVTS creation follows JUCE best practices?
+- ✓ Parameter IDs follow consistent naming convention?
+- ✓ processBlock() stub safe (ScopedNoDenormals, pass-through)?
+
+**Example Report:**
+```json
+{
+  "agent": "validator",
+  "stage": 3,
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "parameter_ranges",
+      "passed": true,
+      "message": "Gain range -60 to +12 dB is standard for audio plugins",
+      "severity": "info"
+    },
+    {
+      "name": "default_values",
+      "passed": true,
+      "message": "Defaults place plugin in neutral/pass-through state",
+      "severity": "info"
+    },
+    {
+      "name": "naming_convention",
+      "passed": true,
+      "message": "Parameter IDs use camelCase consistently",
+      "severity": "info"
+    },
+    {
+      "name": "processblock_safety",
+      "passed": true,
+      "message": "processBlock() uses ScopedNoDenormals and safely passes audio through",
+      "severity": "info"
+    }
+  ],
+  "recommendation": "Shell implementation follows parameter best practices",
+  "continue_to_next_stage": true
+}
+```
+
+### Stage 4: DSP Validation
+
+**Expected Inputs:**
+- `plugins/[PluginName]/Source/PluginProcessor.{h,cpp}` (with DSP implementation)
+- `plugins/[PluginName]/.ideas/architecture.md`
+
+**Semantic Checks (hooks verified components exist):**
+- ✓ DSP algorithm matches creative intent from brief?
+- ✓ Real-time safety maintained (no allocations in processBlock)?
+- ✓ Buffer preallocation in prepareToPlay()?
+- ✓ Component initialization order correct?
+- ✓ Parameter modulation applied correctly?
+- ✓ Edge cases handled (zero-length buffers, extreme parameter values)?
+- ✓ Numerical stability considerations (denormals, DC offset)?
+
+**Example Report:**
+```json
+{
+  "agent": "validator",
+  "stage": 4,
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "creative_intent",
+      "passed": true,
+      "message": "Tape saturation algorithm matches 'warm vintage' description in brief",
+      "severity": "info"
+    },
+    {
+      "name": "realtime_safety",
+      "passed": true,
+      "message": "No allocations found in processBlock(), uses ScopedNoDenormals",
+      "severity": "info"
+    },
+    {
+      "name": "buffer_preallocation",
+      "passed": true,
+      "message": "prepareToPlay() allocates delay buffers and calls component.prepare()",
+      "severity": "info"
+    },
+    {
+      "name": "parameter_modulation",
+      "passed": true,
+      "message": "Parameters smoothly update DSP components each block",
+      "severity": "info"
+    },
+    {
+      "name": "edge_cases",
+      "passed": false,
+      "message": "No check for zero-length buffer in processBlock()",
+      "severity": "warning"
+    }
+  ],
+  "recommendation": "DSP implementation solid, consider adding zero-length buffer check",
+  "continue_to_next_stage": true
+}
+```
+
+### Stage 5: GUI Validation
+
+**Expected Inputs:**
+- `plugins/[PluginName]/Source/PluginEditor.{h,cpp}` (with WebView integration)
+- `plugins/[PluginName]/ui/public/index.html`
+- `plugins/[PluginName]/.ideas/parameter-spec.md`
+
+**Semantic Checks (hooks verified bindings exist):**
+- ✓ Member declaration order correct (Relays → WebView → Attachments)?
+- ✓ UI layout matches mockup aesthetic?
+- ✓ Parameter ranges in UI match spec?
+- ✓ Visual feedback appropriate (knobs respond to mouse)?
+- ✓ Accessibility considerations (labels, contrast)?
+- ✓ WebView initialization safe (error handling)?
+- ✓ Binary data embedded correctly?
+
+**Example Report:**
+```json
+{
+  "agent": "validator",
+  "stage": 5,
+  "status": "PASS",
+  "checks": [
+    {
+      "name": "member_order",
+      "passed": true,
+      "message": "Member declaration order: relays → webView → attachments (prevents 90% crashes)",
+      "severity": "info"
+    },
+    {
+      "name": "ui_aesthetic",
+      "passed": true,
+      "message": "Vintage hardware aesthetic with warm colors matches mockup",
+      "severity": "info"
+    },
+    {
+      "name": "parameter_ranges",
+      "passed": true,
+      "message": "UI slider ranges match parameter-spec.md exactly",
+      "severity": "info"
+    },
+    {
+      "name": "visual_feedback",
+      "passed": true,
+      "message": "Knobs rotate on parameter change, smooth animation",
+      "severity": "info"
+    },
+    {
+      "name": "webview_initialization",
+      "passed": false,
+      "message": "No error handling if WebView fails to load HTML",
+      "severity": "warning"
+    }
+  ],
+  "recommendation": "GUI integration solid, consider adding WebView error handling",
   "continue_to_next_stage": true
 }
 ```
