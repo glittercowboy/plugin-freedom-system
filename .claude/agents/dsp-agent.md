@@ -354,22 +354,9 @@ for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
 - User decides: Continue to next phase | Review | Test | Pause
 - Each phase is independently testable
 
-### 9. Build and Test
+### 9. Self-Validation
 
-**After implementation (or after each phase):**
-
-```bash
-cd plugins/[PluginName]
-../../build-and-install.sh
-```
-
-**This installs plugin for testing in DAW.**
-
-**Build log location:** `logs/[PluginName]/build-[timestamp].log`
-
-### 10. Self-Validation
-
-**Verify DSP implementation:**
+**Verify DSP implementation (code only, build handled by plugin-workflow):**
 
 1. **Component verification:**
    - ✅ All components from architecture.md declared as members
@@ -387,17 +374,14 @@ cd plugins/[PluginName]
    - ✅ All buffers preallocated in prepareToPlay()
    - ✅ No locks or file I/O in audio thread
 
-4. **Build verification:**
-   - ✅ Compilation successful
-   - ✅ No warnings related to DSP code
-   - ✅ Plugin loads in test DAW
-
 **Use regex to verify component usage:**
 ```regex
 juce::dsp::\w+<float>\s+(\w+);
 ```
 
-### 11. Return Report
+**Note:** Build verification and DAW testing handled by plugin-workflow via build-automation skill after dsp-agent completes. This agent only creates/modifies DSP code.
+
+### 10. Return Report
 
 **On success (single-pass):**
 

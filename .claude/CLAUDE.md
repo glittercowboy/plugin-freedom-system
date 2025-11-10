@@ -1,8 +1,10 @@
 # PLUGIN FREEDOM SYSTEM - Plugin Development System
 
 ## System Components
+- **Scripts**: `scripts/` - Build and installation automation
+  - build-and-install.sh - Centralized build automation (7-phase pipeline: validate, build, install, verify)
 - **Skills**: `.claude/skills/` - Each skill follows Anthropic's pattern with `SKILL.md`, `references/`, and `assets/` subdirectories
-  - plugin-workflow, plugin-ideation, plugin-improve, ui-mockup, context-resume, plugin-testing, plugin-lifecycle
+  - plugin-workflow, plugin-ideation, plugin-improve, ui-mockup, context-resume, plugin-testing, plugin-lifecycle, build-automation
 - **Subagents**: `.claude/agents/` - foundation-agent, shell-agent, dsp-agent, gui-agent, validator, troubleshooter
 - **Commands**: `.claude/commands/` - /dream, /implement, /improve, /continue, /test, /install-plugin, /show-standalone, /troubleshoot-juce, /doc-fix
 - **Hooks**: `.claude/hooks/` - Validation gates (PostToolUse, SubagentStop, UserPromptSubmit, Stop, PreCompact, SessionStart)
@@ -28,3 +30,5 @@
 - ✓ Phase 0: Foundation & Contracts (complete)
 - ✓ Phase 1: Discovery System (complete)
 - ✓ Phase 2: Workflow Engine (complete)
+- ✓ Phase 3: Implementation Subagents (complete)
+- ✓ Phase 4: Build & Troubleshooting System (complete)

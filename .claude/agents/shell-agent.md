@@ -276,25 +276,9 @@ void [PluginName]AudioProcessorEditor::paint(juce::Graphics& g)
 }
 ```
 
-### 8. Build and Test
+### 8. Self-Validation
 
-Build the plugin with full installation:
-
-```bash
-cd plugins/[PluginName]
-../../build-and-install.sh
-```
-
-**This will:**
-- Rebuild with parameters
-- Install to system plugin folders
-- Allow DAW testing
-
-**Build log location:** `logs/[PluginName]/build-[timestamp].log`
-
-### 9. Self-Validation
-
-After build succeeds, verify implementation:
+Verify implementation (code only, build handled by plugin-workflow):
 
 1. **Code verification:**
    - ✅ Read `Source/PluginProcessor.cpp`
@@ -303,12 +287,7 @@ After build succeeds, verify implementation:
    - ✅ Verify ALL parameter IDs from spec are present in code
    - ✅ Verify type mapping correct (Float→AudioParameterFloat, etc.)
 
-2. **Compilation verification:**
-   - ✅ Build completed successfully (exit code 0)
-   - ✅ No compilation warnings related to parameters
-   - ✅ All three formats built (VST3, AU, Standalone)
-
-3. **Contract compliance:**
+2. **Contract compliance:**
    - ✅ Every parameter from parameter-spec.md is implemented
    - ✅ No extra parameters added (zero drift)
    - ✅ Parameter IDs match exactly (case-sensitive)
@@ -324,7 +303,9 @@ AudioParameter(?:Float|Bool|Choice)\s*\(\s*ParameterID\s*\{\s*"(\w+)"
 - Set status="failure"
 - Do NOT proceed
 
-### 10. Return Report
+**Note:** Build verification is handled by plugin-workflow via build-automation skill after shell-agent completes. This agent only creates/modifies code.
+
+### 9. Return Report
 
 Generate JSON report:
 

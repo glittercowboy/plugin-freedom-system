@@ -14,6 +14,12 @@
 - If status is 🚧: ONLY plugin-workflow can modify (use `/continue` to resume)
 - plugin-improve blocks if status is 🚧 (must complete workflow first)
 
+## Build Management
+
+- All plugin builds managed by `build-automation` skill
+- Build logs: `logs/[PluginName]/build_TIMESTAMP.log`
+- Installed plugins: `~/Library/Audio/Plug-Ins/VST3/` and `~/Library/Audio/Plug-Ins/Components/`
+
 ## Plugin Registry
 
 | Plugin Name | Status | Version | Last Updated |

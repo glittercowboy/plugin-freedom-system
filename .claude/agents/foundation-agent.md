@@ -290,44 +290,20 @@ void [PluginName]AudioProcessorEditor::resized()
 - Placeholder text for Stage 2
 - Empty layout (WebView added in Stage 5)
 
-### 7. Build Project
+### 7. Self-Validation
 
-Invoke the build automation script:
-
-```bash
-cd plugins/[PluginName]
-../../build-and-install.sh --no-install
-```
-
-**The build script will:**
-- Configure CMake with Ninja generator
-- Build all targets (VST3, AU, Standalone)
-- Log output to `logs/[PluginName]/build-[timestamp].log`
-
-**Do NOT install yet** (--no-install flag). Installation happens in Stage 6.
-
-### 8. Self-Validation
-
-After build completes, verify:
+Verify files created:
 
 1. **Files created:**
    - ✅ CMakeLists.txt exists
    - ✅ Source/PluginProcessor.{h,cpp} exist
    - ✅ Source/PluginEditor.{h,cpp} exist
 
-2. **Build artifacts exist:**
-   - ✅ build/[PluginName]_artefacts/ directory exists
-   - ✅ VST3 binary present
-   - ✅ AU bundle present
-   - ✅ Standalone app present
-
-3. **Compilation success:**
-   - ✅ Build script exit code 0
-   - ✅ No compilation errors in log
-
 **If any checks fail:** Set status="failure", document issue in report
 
-### 9. Return Report
+**Note:** Build verification is handled by plugin-workflow via build-automation skill after foundation-agent completes. This agent only creates source files.
+
+### 8. Return Report
 
 Generate JSON report in this exact format:
 
@@ -337,11 +313,6 @@ Generate JSON report in this exact format:
   "status": "success",
   "outputs": {
     "plugin_name": "[PluginName]",
-    "build_artifacts": [
-      "build/[PluginName]_artefacts/VST3/[PluginName].vst3",
-      "build/[PluginName]_artefacts/AU/[PluginName].component",
-      "build/[PluginName]_artefacts/Standalone/[PluginName].app"
-    ],
     "source_files_created": [
       "Source/PluginProcessor.h",
       "Source/PluginProcessor.cpp",
@@ -355,7 +326,7 @@ Generate JSON report in this exact format:
 }
 ```
 
-**If build fails:**
+**If file creation fails:**
 
 ```json
 {
@@ -363,17 +334,18 @@ Generate JSON report in this exact format:
   "status": "failure",
   "outputs": {
     "plugin_name": "[PluginName]",
-    "error_type": "compilation_error",
-    "error_message": "[First error from build log]",
-    "build_log_path": "logs/[PluginName]/build-[timestamp].log"
+    "error_type": "file_creation_error",
+    "error_message": "[Specific error message]"
   },
   "issues": [
-    "Build failed: [specific error]",
-    "See build log for details"
+    "Failed to create: [specific file]",
+    "Reason: [specific reason]"
   ],
   "ready_for_next_stage": false
 }
 ```
+
+**Note:** Build verification happens after this agent completes, managed by plugin-workflow via build-automation skill.
 
 ## Contract Enforcement
 
@@ -399,19 +371,21 @@ Generate JSON report in this exact format:
 
 ## Success Criteria
 
-**Stage 2 succeeds when:**
+**foundation-agent succeeds when:**
 1. All source files created and properly formatted
 2. CMakeLists.txt configured for JUCE 8
-3. Build completes without errors
-4. All three formats (VST3, AU, Standalone) built successfully
-5. JSON report generated with correct format
+3. File validation passes (all files exist)
+4. JSON report generated with correct format
 
-**Stage 2 fails when:**
-- Any contract missing
-- CMake configuration fails
-- Compilation errors
-- Build artifacts missing
+**foundation-agent fails when:**
+- Any contract missing (creative-brief.md, architecture.md, plan.md)
 - Cannot extract PRODUCT_NAME from creative-brief.md
+- File creation errors (permissions, disk space, etc.)
+- Invalid plugin type specified in architecture.md
+
+**Build verification (Stage 2 completion) handled by:**
+- plugin-workflow invokes build-automation skill after foundation-agent completes
+- build-automation runs build script and handles any build failures
 
 ## Notes
 

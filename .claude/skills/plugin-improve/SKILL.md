@@ -298,33 +298,34 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 **1. Build plugin:**
 
-Invoke `build-automation` skill (Phase 4 - stub for now):
+Invoke `build-automation` skill (full build with installation):
 
 ```
-NOTE: build-automation skill will be implemented in Phase 4.
-For now, running manual build.
+Invoking build-automation skill to build and install updated plugin...
 ```
 
-Run manual build:
+build-automation will:
+- Run build script: `scripts/build-and-install.sh [PluginName]` (full build)
+- Build VST3 and AU formats in parallel
+- Install to system folders
+- Clear DAW caches
+- Verify installation
 
-```bash
-cmake --build build --config Release
-```
+If build succeeds:
+- build-automation displays success message with installation paths
+- Returns control to plugin-improve
+- Proceed to Phase 5, step 2 (Run tests)
 
-If build fails, present menu:
+If build fails:
+- build-automation presents 4-option failure protocol:
+  1. Investigate (troubleshooter agent)
+  2. Show build log
+  3. Show code
+  4. Wait for manual fix
+- After resolution and successful retry, returns to plugin-improve
+- Proceed to Phase 5, step 2 (Run tests)
 
-```
-✗ Build failed: [error summary]
-
-What would you like to do?
-1. Investigate error
-2. Show me the build output
-3. I'll fix it manually
-4. Restore backup and abort
-5. Other
-
-Choose (1-5): _
-```
+**Note:** Build failure handling is entirely managed by build-automation skill. plugin-improve does not need custom build error menus.
 
 **2. Run tests:**
 

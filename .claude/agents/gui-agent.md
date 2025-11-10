@@ -458,28 +458,9 @@ void [PluginName]AudioProcessorEditor::paint(juce::Graphics& g)
 }
 ```
 
-### 11. Build and Test
+### 11. Self-Validation
 
-**Build with full installation:**
-
-```bash
-cd plugins/[PluginName]
-../../build-and-install.sh
-```
-
-**Test in DAW:**
-1. Open plugin in DAW
-2. Verify UI renders correctly
-3. Test each parameter control
-4. Verify automation works (record parameter changes)
-5. Save and load preset
-6. Reload plugin (tests destructor order)
-
-**Build log location:** `logs/[PluginName]/build-[timestamp].log`
-
-### 12. Self-Validation
-
-**Verify UI integration:**
+**Verify UI integration (code only, build and DAW testing handled by plugin-workflow):**
 
 1. **File verification:**
    - ✅ `ui/public/index.html` exists
@@ -499,17 +480,6 @@ cd plugins/[PluginName]
    - ✅ `juce_add_binary_data` includes all UI files
    - ✅ `JUCE_WEB_BROWSER=1` defined
 
-4. **Build verification:**
-   - ✅ Compilation successful
-   - ✅ No warnings about WebView
-   - ✅ Plugin loads in DAW
-
-5. **UI verification:**
-   - ✅ WebView renders (not blank)
-   - ✅ All parameter controls visible
-   - ✅ Parameters respond to UI input
-   - ✅ UI updates when parameters change (automation, preset load)
-
 **Extract parameter IDs from code:**
 ```regex
 WebSliderRelay\s+(\w+)Relay\s*\{\s*"(\w+)"\s*\}
@@ -517,7 +487,9 @@ WebSliderRelay\s+(\w+)Relay\s*\{\s*"(\w+)"\s*\}
 
 **Compare with parameter-spec.md:** All IDs must match exactly.
 
-### 13. Return Report
+**Note:** Build verification, plugin installation, and DAW testing handled by plugin-workflow via build-automation skill after gui-agent completes. This agent only creates/modifies UI code and configuration.
+
+### 12. Return Report
 
 **On success:**
 

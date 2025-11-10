@@ -991,27 +991,30 @@ Choose (1-3): _
 }
 ```
 
-### 5. Handle Success/Failure
+### 5. Handle foundation-agent Success/Failure
 
-**If status="success":**
+**If status="success" (files created):**
 
 ```typescript
 if (report.status === "success" && report.ready_for_next_stage) {
-  console.log(`✓ Stage 2 complete: Build system created`)
+  console.log(`✓ foundation-agent complete: Source files created`)
   console.log(`  - Plugin: ${report.outputs.plugin_name}`)
-  console.log(`  - Build artifacts: ${report.outputs.build_artifacts?.length || 0}`)
+  console.log(`  - Files: ${report.outputs.source_files_created?.length || 0}`)
 
-  // Continue to stage completion workflow
+  // Now invoke build-automation to verify compilation
+  console.log(`\nInvoking build-automation to verify compilation...`)
+
+  // Proceed to section 5a (Build Verification)
 }
 ```
 
-**If status="failure":**
+**If status="failure" (file creation failed):**
 
 ```typescript
 if (report.status === "failure") {
   console.log(`
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✗ Stage 2 Failed: Build System Creation
+✗ Stage 2 Failed: File Creation Error
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Error: ${report.outputs.error_message || "Unknown error"}
@@ -1020,70 +1023,46 @@ Type: ${report.outputs.error_type || "N/A"}
 Issues:
 ${report.issues.map(issue => `  - ${issue}`).join('\n')}
 
-${report.outputs.build_log_path ? `Build log: ${report.outputs.build_log_path}` : ''}
-
 What would you like to do?
-1. Investigate (invoke troubleshooter for root cause analysis)
-2. Show me the code (display CMakeLists.txt and source files)
-3. Show me the build output (full build log)
-4. I'll fix it manually (say "resume automation" when ready)
+1. Show me the code (display files that were created)
+2. Retry foundation-agent
+3. I'll fix it manually (say "resume automation" when ready)
 
-Choose (1-4): _
+Choose (1-3): _
   `)
 
   // Wait for user response
   const choice = getUserInput()
 
-  if (choice === "1" || choice === "investigate") {
-    // Invoke troubleshooter agent
-    console.log("Launching troubleshooter to investigate build failure...")
-
-    const troubleshootResult = Task({
-      subagent_type: "troubleshooter",
-      description: `Investigate Stage 2 build failure for ${pluginName}`,
-      prompt: `
-Investigate build failure for ${pluginName} at Stage 2 (foundation).
-
-Error: ${report.outputs.error_message}
-Build log: ${report.outputs.build_log_path}
-
-Analyze the root cause and suggest fix.
-      `
-    })
-
-    console.log("\nTroubleshooter findings:")
-    console.log(troubleshootResult)
-
-    console.log("\nWould you like to:")
-    console.log("1. Apply suggested fix")
-    console.log("2. Show code")
-    console.log("3. Manual fix")
-    console.log("\nChoose (1-3): _")
-  }
-
-  if (choice === "2" || choice === "show code") {
+  if (choice === "1" || choice === "show code") {
     // Display generated files
-    const cmakeContent = readFile(`plugins/${pluginName}/CMakeLists.txt`)
-    const processorH = readFile(`plugins/${pluginName}/Source/PluginProcessor.h`)
+    const files = [
+      'CMakeLists.txt',
+      'Source/PluginProcessor.h',
+      'Source/PluginProcessor.cpp',
+      'Source/PluginEditor.h',
+      'Source/PluginEditor.cpp'
+    ]
 
-    console.log("\n=== CMakeLists.txt ===")
-    console.log(cmakeContent)
-    console.log("\n=== PluginProcessor.h ===")
-    console.log(processorH)
+    for (const file of files) {
+      const path = `plugins/${pluginName}/${file}`
+      if (fileExists(path)) {
+        console.log(`\n=== ${file} ===`)
+        console.log(readFile(path))
+      } else {
+        console.log(`\n✗ ${file} - NOT FOUND`)
+      }
+    }
 
     // Re-present menu
   }
 
-  if (choice === "3" || choice === "show output") {
-    // Display build log
-    const buildLog = readFile(report.outputs.build_log_path)
-    console.log("\n=== Build Log ===")
-    console.log(buildLog)
-
-    // Re-present menu
+  if (choice === "2" || choice === "retry") {
+    console.log("Retrying foundation-agent...")
+    // Return to step 2 (Invoke foundation-agent)
   }
 
-  if (choice === "4" || choice === "manual") {
+  if (choice === "3" || choice === "manual") {
     console.log("\n⏸ Paused for manual intervention.")
     console.log("Fix the issue, then say 'resume automation' to continue.")
     return  // Exit, wait for user to say "resume automation"
@@ -1091,7 +1070,51 @@ Analyze the root cause and suggest fix.
 }
 ```
 
-**NEVER auto-retry.** Always present menu and wait for user decision.
+### 5a. Build Verification via build-automation
+
+**After foundation-agent succeeds, invoke build-automation skill:**
+
+```typescript
+console.log("Invoking build-automation skill with --no-install flag...")
+
+// build-automation skill handles the entire build process
+// It will invoke scripts/build-and-install.sh --no-install [PluginName]
+// and present appropriate menus on success or failure
+
+Skill({
+  skill: "build-automation",
+  context: {
+    plugin_name: pluginName,
+    stage: 2,
+    flags: ["--no-install"],
+    invoking_skill: "plugin-workflow",
+    purpose: "Verify Stage 2 foundation compiles successfully"
+  }
+})
+```
+
+**build-automation will:**
+1. Run build script with --no-install flag
+2. If build succeeds: Display success message, return control to plugin-workflow
+3. If build fails: Present 4-option failure protocol:
+   - Investigate (troubleshooter)
+   - Show build log
+   - Show code
+   - Wait for manual fix
+
+**After build-automation returns success:**
+
+```typescript
+console.log(`
+✓ Stage 2 build verification complete
+  - Compilation: Successful
+  - Artifacts: VST3, AU, Standalone (not installed)
+`)
+
+// Continue to stage completion workflow (section 6-8)
+```
+
+**Note:** Build failures are now handled entirely by build-automation skill. plugin-workflow does NOT need to handle build troubleshooting - build-automation provides comprehensive failure protocol with troubleshooter integration.
 
 ### 6. Update State Files
 
@@ -1273,7 +1296,9 @@ ${architectureContent}
 
 Follow the instructions in .claude/agents/shell-agent.md exactly.
 
-Create APVTS with ALL parameters from parameter-spec.md, implement state management, update processBlock stub, build and install plugin.
+Create APVTS with ALL parameters from parameter-spec.md, implement state management, update processBlock stub.
+
+Build verification handled by plugin-workflow after agent completes.
 
 CRITICAL: Use JUCE 8 ParameterID format: juce::ParameterID { "id", 1 }
 
@@ -1516,7 +1541,9 @@ ${planContent}
 
 Follow the instructions in .claude/agents/dsp-agent.md exactly.
 
-Implement all DSP components from architecture.md in processBlock(), connect all parameters, ensure real-time safety (no allocations, use juce::ScopedNoDenormals), build and install plugin.
+Implement all DSP components from architecture.md in processBlock(), connect all parameters, ensure real-time safety (no allocations, use juce::ScopedNoDenormals).
+
+Build verification handled by plugin-workflow after agent completes.
 
 Return JSON report in the exact format specified in dsp-agent.md.
   `
@@ -1974,7 +2001,9 @@ ${creativeBriefContent}
 
 Follow the instructions in .claude/agents/gui-agent.md exactly.
 
-Copy finalized mockup to ui/public/index.html, download JUCE frontend library, create relay members in PluginEditor.h (CRITICAL: Relays → WebView → Attachments order), implement parameter bindings, update CMakeLists.txt for WebView, build and install.
+Copy finalized mockup to ui/public/index.html, download JUCE frontend library, create relay members in PluginEditor.h (CRITICAL: Relays → WebView → Attachments order), implement parameter bindings, update CMakeLists.txt for WebView.
+
+Build verification handled by plugin-workflow after agent completes.
 
 ⚠️ CRITICAL: Member declaration order prevents 90% of release build crashes.
 
