@@ -2,7 +2,7 @@
 name: plugin-workflow
 description: Complete 7-stage JUCE plugin development workflow
 allowed-tools:
-  - Task # For subagents (Phases 2-5)
+  - Task # For subagents (Stages 2-5)
   - Bash # For git commits
   - Read # For contracts
   - Write # For documentation
@@ -174,15 +174,15 @@ function dispatchStage(pluginName, stageNumber) {
     case 1:
       return executeStage1Planning(pluginName)
     case 2:
-      return executeStage2FoundationStub(pluginName) // Phase 2b: stub
+      return executeStage2Foundation(pluginName)
     case 3:
-      return executeStage3ShellStub(pluginName) // Phase 2b: stub
+      return executeStage3Shell(pluginName)
     case 4:
-      return executeStage4DSPStub(pluginName) // Phase 2b: stub
+      return executeStage4DSP(pluginName)
     case 5:
-      return executeStage5GUIStub(pluginName) // Phase 2b: stub
+      return executeStage5GUI(pluginName)
     case 6:
-      return executeStage6Validation(pluginName) // Phase 2c
+      return executeStage6Validation(pluginName)
     default:
       return { status: 'error', reason: `Invalid stage: ${stageNumber}` }
   }
