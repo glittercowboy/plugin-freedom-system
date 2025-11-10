@@ -143,7 +143,9 @@ Structure the plan as follows:
    **Verification**:
 
 - Automated: [Specific test command or script]
-- Manual: "Lex, please verify that [specific behavior] occurs when [specific action]"
+- Manual: STOP AND ASK LEX: "Please verify that [specific behavior] occurs when [specific action]"
+
+**CRITICAL:** After specifying manual verification, the implementation MUST pause and wait for Lex's confirmation before proceeding to the next task. Manual verification is a blocking checkpoint, not optional documentation.
 
 [Continue for every single task in perfect sequential order]
 
@@ -206,6 +208,10 @@ Phase $PHASE_NUMBER is COMPLETE when:
 - Reference specific line numbers or sections when pointing to documentation
 - Make manual test instructions so clear that they cannot be misinterpreted
 - If a phase seems too large even after splitting, note this and recommend further division
+- Manual verification steps are BLOCKING checkpoints - implementation must pause and wait for user response
+- Use explicit language: "STOP AND ASK LEX:" to indicate required user interaction before proceeding
+- Each task's manual verification must be completed and confirmed by Lex before the next task begins
+- Never treat manual verification as optional documentation or combine multiple task verifications into a single checkpoint
 </constraints>
 
 <output>
