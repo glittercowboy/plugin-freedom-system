@@ -4,6 +4,14 @@ All notable changes to TapeAge will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
+## [1.0.1] - 2025-11-11
+
+### Fixed
+
+- Parameter state now persists correctly when closing and reopening Ableton Live
+- Changed `getNumPrograms()` to return 0 to prevent Ableton from interfering with state restoration
+- Fixes issue where parameters would reset to defaults on project reload
+
 ## [1.0.0] - 2025-11-11
 
 ### Added
