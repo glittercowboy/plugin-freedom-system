@@ -1,28 +1,45 @@
 ---
 name: plugin-lifecycle
-description: Install/remove plugins from macOS system folders
+description: Manage complete plugin lifecycle - install, uninstall, reset, destroy
 allowed-tools:
   - Bash
   - Read
   - Edit # For PLUGINS.md updates
+  - Write # For backup metadata
 preconditions:
-  - Plugin must have successful Release build
+  - Varies by mode (see mode-specific preconditions)
 ---
 
 # plugin-lifecycle Skill
 
-**Purpose:** Install plugins to macOS system folders with proper permissions, cache clearing, and verification.
+**Purpose:** Manage the complete lifecycle of plugins from installation to removal with proper state tracking and safety features.
 
 ## Overview
 
-This skill handles the complete lifecycle of plugin installation and removal on macOS:
+This skill handles all plugin lifecycle operations on macOS:
 
-- **Installation**: Copy Release binaries to system folders (`~/Library/Audio/Plug-Ins/`)
-- **Permissions**: Set correct permissions (755) for DAW access
-- **Cache clearing**: Clear DAW caches (Ableton, Logic Pro, AudioComponentRegistrar)
-- **Verification**: Confirm successful installation with timestamps and sizes
-- **State tracking**: Update PLUGINS.md with installation status and locations
-- **Uninstallation**: Clean removal with cache clearing
+- **Installation (Mode 1)**: Copy Release binaries to system folders (`~/Library/Audio/Plug-Ins/`)
+- **Uninstallation (Mode 2)**: Clean removal from system folders (preserves source code)
+- **Reset to Ideation (Mode 3)**: Remove implementation, keep idea/mockups (surgical rollback)
+- **Destroy (Mode 4)**: Complete removal with backup (nuclear option)
+
+All operations include proper permissions, cache clearing, state tracking, and safety features (confirmations, backups).
+
+---
+
+## Mode Dispatcher
+
+This skill operates in different modes based on the invoking command:
+
+| Mode | Operation | Command | Purpose |
+|------|-----------|---------|---------|
+| 1 | Installation | `/install-plugin` | Deploy to system folders |
+| 2 | Uninstallation | `/uninstall` | Remove binaries, keep source |
+| 3 | Reset to Ideation | `/reset-to-ideation` | Remove implementation, keep idea/mockups |
+| 4 | Destroy | `/destroy` | Complete removal with backup |
+| Menu | Interactive | `/clean` | Present menu, user chooses mode |
+
+**Pattern:** Commands are thin routers that invoke this skill with a specific mode. The skill dispatches to the appropriate reference file for detailed implementation.
 
 **Why this matters:**
 
@@ -80,6 +97,69 @@ See **[references/uninstallation-process.md](references/uninstallation-process.m
 
 ---
 
+## Reset to Ideation Workflow (Mode 3)
+
+Surgical rollback that removes implementation but preserves ideation artifacts:
+
+**What gets preserved:**
+- Creative brief (the original idea)
+- UI mockups (all versions)
+- Parameter specifications
+
+**What gets removed:**
+- Source code (Source/ directory)
+- Build configuration (CMakeLists.txt)
+- Implementation docs (architecture.md, plan.md)
+- Build artifacts and installed binaries
+
+**Use case:** Implementation went wrong, but the concept and UI design are solid. Start fresh from Stage 0.
+
+See **[references/mode-3-reset.md](references/mode-3-reset.md)** for complete implementation.
+
+---
+
+## Destroy Workflow (Mode 4)
+
+Complete removal with backup for abandoned plugins:
+
+**What gets removed:**
+- Everything: source code, binaries, build artifacts, PLUGINS.md entry
+- Optionally: troubleshooting docs mentioning the plugin
+
+**Safety features:**
+- Timestamped backup created before deletion
+- Requires typing exact plugin name to confirm
+- Blocks if status is 🚧 (protects in-progress work)
+
+**Use case:** Abandoned experiment, complete failure, duplicate by mistake. Never using this plugin again.
+
+See **[references/mode-4-destroy.md](references/mode-4-destroy.md)** for complete implementation.
+
+---
+
+## Interactive Menu (Mode: Menu)
+
+When invoked via `/clean [PluginName]`, present interactive menu:
+
+```
+Plugin cleanup options for [PluginName]:
+
+1. Uninstall - Remove binaries from system folders (keep source code)
+2. Reset to ideation - Remove implementation, keep idea/mockups
+3. Destroy - Complete removal with backup (IRREVERSIBLE except via backup)
+4. Cancel
+
+Choose (1-4): _
+```
+
+**Menu logic:**
+- Read current plugin status from PLUGINS.md
+- Show appropriate options based on status
+- Route to selected mode
+- Handle cancellation gracefully
+
+---
+
 ## Error Handling
 
 Common error scenarios with troubleshooting:
@@ -124,10 +204,14 @@ Choose (1-5): _
 
 **Invoked by:**
 
-- `/install-plugin [PluginName]` command
-- `plugin-workflow` skill → After Stage 6 (Validation) complete
-- `plugin-improve` skill → After successful changes + testing
-- Natural language: "Install [PluginName]", "Deploy [PluginName] to system folders"
+- `/install-plugin [PluginName]` → Mode 1 (Installation)
+- `/uninstall [PluginName]` → Mode 2 (Uninstallation)
+- `/reset-to-ideation [PluginName]` → Mode 3 (Reset)
+- `/destroy [PluginName]` → Mode 4 (Destroy)
+- `/clean [PluginName]` → Interactive menu
+- `plugin-workflow` skill → After Stage 6 (offers installation)
+- `plugin-improve` skill → After successful changes (offers reinstallation)
+- Natural language: "Install [PluginName]", "Remove [PluginName]", "Clean up [PluginName]"
 
 **Invokes:**
 
