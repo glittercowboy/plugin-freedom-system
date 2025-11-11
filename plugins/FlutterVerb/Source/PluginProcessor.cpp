@@ -83,8 +83,18 @@ FlutterVerbAudioProcessor::~FlutterVerbAudioProcessor()
 
 void FlutterVerbAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // DSP initialization will be added in Stage 4
-    juce::ignoreUnused(sampleRate, samplesPerBlock);
+    // Prepare DSP spec
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
+
+    // Phase 4.1: Prepare core reverb processing components
+    dryWetMixer.prepare(spec);
+    dryWetMixer.reset();
+
+    // Prepare reverb with ProcessSpec
+    reverb.prepare(spec);
+    reverb.reset();
 }
 
 void FlutterVerbAudioProcessor::releaseResources()
@@ -97,25 +107,50 @@ void FlutterVerbAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     juce::ScopedNoDenormals noDenormals;
     juce::ignoreUnused(midiMessages);
 
-    // Parameter access example (for Stage 4 DSP implementation):
-    // auto* sizeParam = parameters.getRawParameterValue("SIZE");
-    // auto* decayParam = parameters.getRawParameterValue("DECAY");
-    // auto* mixParam = parameters.getRawParameterValue("MIX");
-    // auto* ageParam = parameters.getRawParameterValue("AGE");
-    // auto* driveParam = parameters.getRawParameterValue("DRIVE");
-    // auto* toneParam = parameters.getRawParameterValue("TONE");
-    // auto* modModeParam = parameters.getRawParameterValue("MOD_MODE");
-    //
-    // float size = sizeParam->load();      // Atomic read (real-time safe)
-    // float decay = decayParam->load();
-    // float mix = mixParam->load();
-    // float age = ageParam->load();
-    // float drive = driveParam->load();
-    // float tone = toneParam->load();
-    // bool modMode = modModeParam->load() > 0.5f;
+    // Clear unused channels
+    for (int i = getTotalNumInputChannels(); i < getTotalNumOutputChannels(); ++i)
+        buffer.clear(i, 0, buffer.getNumSamples());
 
-    // Pass-through for Stage 3 (DSP implementation happens in Stage 4)
-    // Audio routing is already handled by JUCE bus configuration
+    // Phase 4.1: Read SIZE, DECAY, MIX parameters (atomic, real-time safe)
+    auto* sizeParam = parameters.getRawParameterValue("SIZE");
+    auto* decayParam = parameters.getRawParameterValue("DECAY");
+    auto* mixParam = parameters.getRawParameterValue("MIX");
+
+    float sizeValue = sizeParam->load() / 100.0f;  // 0-100% → 0.0-1.0
+    float decayValue = decayParam->load();          // 0.1-10.0 seconds
+    float mixValue = mixParam->load() / 100.0f;     // 0-100% → 0.0-1.0
+
+    // Configure reverb parameters
+    juce::Reverb::Parameters reverbParams;
+    reverbParams.roomSize = sizeValue;
+
+    // Map decay time to damping (inverse relationship)
+    // Short decay → high damping, long decay → low damping
+    // Empirical mapping: decay 0.1s → damping 0.9, decay 10s → damping 0.1
+    reverbParams.damping = juce::jmap(decayValue, 0.1f, 10.0f, 0.9f, 0.1f);
+
+    reverbParams.width = 1.0f;         // Full stereo
+    reverbParams.freezeMode = 0.0f;    // No freeze
+    reverbParams.wetLevel = 1.0f;      // Full wet (mixer handles blend)
+    reverbParams.dryLevel = 0.0f;      // No dry (mixer handles blend)
+
+    reverb.setParameters(reverbParams);
+
+    // Set dry/wet mix proportion
+    dryWetMixer.setWetMixProportion(mixValue);
+
+    // Process audio with DSP pipeline
+    juce::dsp::AudioBlock<float> block(buffer);
+
+    // Push dry samples before processing
+    dryWetMixer.pushDrySamples(block);
+
+    // Process reverb using modern DSP API
+    juce::dsp::ProcessContextReplacing<float> context(block);
+    reverb.process(context);
+
+    // Mix dry and wet samples
+    dryWetMixer.mixWetSamples(block);
 }
 
 juce::AudioProcessorEditor* FlutterVerbAudioProcessor::createEditor()

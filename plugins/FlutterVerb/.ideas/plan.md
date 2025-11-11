@@ -15,16 +15,17 @@
 
 - Stage 0: Research ✓
 - Stage 1: Planning ✓
-- Stage 2: Foundation
-- Stage 3: Shell
-- Stage 4: DSP (phased)
+- Stage 2: Foundation ✓
+- Stage 3: Shell ✓
+- Stage 4: DSP (phased) - Phase 4.1 in progress
 - Stage 5: GUI (phased)
 - Stage 6: Validation
 
 ## Stage 4: DSP Phases
 
-### Phase 4.1: Core Reverb Processing
+### Phase 4.1: Core Reverb Processing ✓
 
+**Completed:** 2025-11-11
 **Goal:** Implement basic plate reverb with dry/wet mixing
 **Components:**
 - juce::dsp::Reverb initialization and configuration
@@ -40,6 +41,17 @@
 - [ ] MIX parameter blends dry/wet correctly
 
 **Duration:** 15 min
+
+**Implementation Notes:**
+- Added juce::dsp::Reverb and juce::dsp::DryWetMixer member variables
+- Implemented prepareToPlay() with component initialization
+- Implemented processBlock() with SIZE/DECAY/MIX parameter mapping
+- Decay mapped to damping using inverse relationship (short decay = high damping)
+- Reverb configured for full stereo width, no freeze mode
+- DryWetMixer handles dry/wet blend with MIX parameter
+- Added juce_dsp module to CMakeLists.txt
+- Real-time safety: All allocations in prepareToPlay(), atomic parameter reads
+- Multi-channel support: Handles mono, stereo, and multi-channel configurations
 
 ### Phase 4.2: Modulation System
 

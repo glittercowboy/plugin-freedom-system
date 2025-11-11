@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 
 class FlutterVerbAudioProcessor : public juce::AudioProcessor
 {
@@ -30,6 +31,14 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
+    // DSP Components (declare BEFORE parameters for initialization order)
+    juce::dsp::ProcessSpec spec;
+
+    // Phase 4.1: Core Reverb Processing
+    juce::dsp::Reverb reverb;
+    juce::dsp::DryWetMixer<float> dryWetMixer;
+
+    // APVTS comes AFTER DSP components
     juce::AudioProcessorValueTreeState parameters;
 
     // Parameter layout creation
