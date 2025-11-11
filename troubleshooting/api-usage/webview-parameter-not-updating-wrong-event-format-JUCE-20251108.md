@@ -225,6 +225,7 @@ The `getSliderState()` API from JUCE's JavaScript module:
 
 ## Related Issues
 
+- See also: [webview-knobs-frozen-multiple-causes-TapeAge-20251111.md](../gui-issues/webview-knobs-frozen-multiple-causes-TapeAge-20251111.md) - Different WebView parameter freeze (root cause: missing nullptr in WebSliderParameterAttachment + missing check_native_interop.js + duplicate PLUGIN_CODE)
 - See also: webbrowser-local-html-url-cant-be-shown.md - Resource provider pattern required for HTML loading
 - JUCE 8 WebView blog: https://juce.com/blog/juce-8-feature-overview-webview-uis/
 - Official example: `/Applications/JUCE/examples/Plugins/WebViewPluginDemo.h`

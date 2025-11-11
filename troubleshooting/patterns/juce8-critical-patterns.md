@@ -384,6 +384,151 @@ MyPluginEditor::MyPluginEditor(MyProcessor& p)
 
 ---
 
+## 12. WebSliderParameterAttachment - Three Parameters Required (JUCE 8)
+
+### ❌ WRONG (Knobs frozen - no parameter updates)
+```cpp
+// JUCE 7 style (2 parameters) - FAILS silently in JUCE 8
+driveAttachment = std::make_unique<juce::WebSliderParameterAttachment>(
+    *processorRef.parameters.getParameter("drive"), *driveRelay);
+```
+
+### ✅ CORRECT
+```cpp
+// JUCE 8 requires 3 parameters (added undoManager)
+driveAttachment = std::make_unique<juce::WebSliderParameterAttachment>(
+    *processorRef.parameters.getParameter("drive"), *driveRelay, nullptr);
+```
+
+**Why:**
+- JUCE 8 changed WebSliderParameterAttachment constructor signature
+- Old signature: `(parameter, relay)`
+- New signature: `(parameter, relay, undoManager)`
+- Missing third parameter causes **silent failure** - compiles but doesn't bind
+- UI displays correctly but knobs don't respond to mouse input
+- No compiler error or warning
+
+**Symptoms:**
+- WebView UI loads and displays properly
+- Knobs visible but completely frozen (don't respond to drag)
+- Parameters don't update when knobs are moved
+- Audio processing works (parameters have default values)
+
+**When:** ALL WebView-based plugins using WebSliderParameterAttachment
+
+**Documented in:** Pattern discovered during TapeAge frozen knobs issue (2025-11-11)
+
+---
+
+## 13. check_native_interop.js - Required for WebView (CRITICAL)
+
+### ❌ WRONG (Missing file - UI may freeze)
+```cmake
+# CMakeLists.txt
+juce_add_binary_data(PluginName_UIResources
+    SOURCES
+        Source/ui/public/index.html
+        Source/ui/public/js/juce/index.js
+        # Missing: check_native_interop.js
+)
+```
+
+### ✅ CORRECT
+```cmake
+# CMakeLists.txt
+juce_add_binary_data(PluginName_UIResources
+    SOURCES
+        Source/ui/public/index.html
+        Source/ui/public/js/juce/index.js
+        Source/ui/public/js/juce/check_native_interop.js  # Required
+)
+```
+
+**PluginEditor.cpp resource handler:**
+```cpp
+// Must serve check_native_interop.js
+if (url == "/js/juce/check_native_interop.js") {
+    return juce::WebBrowserComponent::Resource {
+        makeVector(BinaryData::check_native_interop_js,
+                  BinaryData::check_native_interop_jsSize),
+        juce::String("text/javascript")
+    };
+}
+```
+
+**Why:**
+- `check_native_interop.js` is JUCE's WebView initialization verification script
+- Tests that native C++ ↔ JavaScript bridge is working
+- Without it, WebView may appear to load but native integration fails silently
+- Results in frozen UI, non-responsive controls, broken parameter binding
+
+**Symptoms:**
+- UI loads and displays correctly
+- Knobs visible but don't respond to interaction
+- Similar to missing nullptr, but root cause is missing initialization
+
+**Source:** Copy from working plugin (e.g., GainKnob) or JUCE examples
+
+**When:** ALL WebView-based plugins
+
+**Documented in:** Pattern discovered during TapeAge frozen knobs issue (2025-11-11)
+
+---
+
+## 14. Changing PRODUCT_NAME - Manual Cleanup Required (CRITICAL)
+
+### ❌ WRONG (Leaves orphaned plugins)
+```bash
+# Change PRODUCT_NAME in CMakeLists.txt
+PRODUCT_NAME "TAPE AGE"  →  PRODUCT_NAME "TapeAge"
+
+# Build and install
+./scripts/build-and-install.sh PluginName
+
+# Result: Both "TAPE AGE" and "TapeAge" exist in system folders
+# DAW shows duplicate plugins, one broken
+```
+
+### ✅ CORRECT
+```bash
+# BEFORE changing PRODUCT_NAME, manually remove old versions:
+rm -rf ~/Library/Audio/Plug-Ins/VST3/"TAPE AGE.vst3"
+rm -rf ~/Library/Audio/Plug-Ins/Components/"TAPE AGE.component"
+
+# THEN change PRODUCT_NAME in CMakeLists.txt
+PRODUCT_NAME "TapeAge"
+
+# THEN build and install
+./scripts/build-and-install.sh PluginName
+
+# Clear caches
+killall -9 AudioComponentRegistrar
+rm ~/Library/Preferences/Ableton/*/PluginDatabase.cfg
+```
+
+**Why:**
+- Build script's "Phase 4: Remove Old Versions" searches for plugins matching the NEW product name
+- When you change PRODUCT_NAME, old plugins have the OLD name, so they aren't found and removed
+- DAW sees both versions, creating duplicate entries in plugin list
+- Old version is broken (wrong Component ID, missing fixes), new version works
+
+**Prevention:**
+- Always manually remove old plugins BEFORE changing PRODUCT_NAME
+- Or use `/uninstall [PluginName]` before changing name (searches by directory, not product name)
+- After name change, verify only one version exists: `ls ~/Library/Audio/Plug-Ins/{VST3,Components}/ | grep -i PluginName`
+
+**Common scenarios:**
+- Removing spaces: "TAPE AGE" → "TapeAge"
+- Fixing capitalization: "tapeage" → "TapeAge"
+- Renaming plugin: "OldName" → "NewName"
+- Fixing typos in product name
+
+**When:** ANY time PRODUCT_NAME is modified in CMakeLists.txt
+
+**Documented in:** Pattern discovered during TapeAge VST3/AU duplicate issue (2025-11-11)
+
+---
+
 ## Usage Instructions
 
 ### For Subagents (foundation-agent, shell-agent, dsp-agent, gui-agent)

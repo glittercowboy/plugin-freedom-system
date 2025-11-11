@@ -269,6 +269,7 @@ killall -9 AudioComponentRegistrar
 
 ## Related Issues
 
+- See also: [webview-knobs-frozen-multiple-causes-TapeAge-20251111.md](webview-knobs-frozen-multiple-causes-TapeAge-20251111.md) - Follow-up issue: frozen knobs after UI loaded (THREE root causes: missing nullptr, missing check_native_interop.js, duplicate PLUGIN_CODE)
 - See GainKnob implementation (fully working reference)
 - BinaryData flattens directory structure (why explicit mapping needed)
 
