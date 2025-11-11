@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriveVerb v3 - Browser Test</title>
+    <style>
+        /* ====================================================================
+           CRITICAL CSS CONSTRAINTS
+           ==================================================================== */
+
+        /* ⚠️ CRITICAL: Use 100%, NOT 100vh */
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;  /* NOT 100vh - viewport units break first render */
+            overflow: hidden;
+        }
+
+        /* ====================================================================
+           NATIVE APPLICATION FEEL
+           ==================================================================== */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            -webkit-touch-callout: none;
+            -webkit-tap-highlight-color: transparent;
+            cursor: default;
+
+            font-family: 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* ====================================================================
+           PLUGIN LAYOUT
+           ==================================================================== */
+
+        .plugin-container {
+            width: 1000px;
+            height: 500px;
+            background: radial-gradient(circle at 50% 50%, #4a3a2a 0%, #2a1a0a 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Horizontal scan lines for retro hardware feel */
+        .plugin-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                0deg,
+                transparent,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Heavy vignette */
+        .plugin-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, transparent 30%, rgba(0, 0, 0, 0.3) 100%);
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        /* Content block - vertically centered */
+        .content-block {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            width: 100%;
+            transform: translateY(-50%);
+            z-index: 3;
+        }
+
+        /* ====================================================================
+           VU METER SECTION
+           ==================================================================== */
+
+        .vu-meter-section {
+            height: 130px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .vu-meter {
+            width: 860px;
+            height: 110px;
+            background: #1a0a00;
+            border: 4px solid #3a2a1a;
+            border-radius: 4px;
+            position: relative;
+            box-shadow:
+                inset 0 4px 8px rgba(0, 0, 0, 0.6),
+                inset 0 2px 4px rgba(0, 0, 0, 0.4),
+                0 -2px 4px rgba(212, 165, 116, 0.1),
+                0 4px 12px rgba(0, 0, 0, 0.8);
+        }
+
+        .vu-meter-scale {
+            width: 100%;
+            height: 65%;
+            position: relative;
+            padding: 12px 55px 0 55px;
+        }
+
+        .vu-meter-markings {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            height: 100%;
+            position: relative;
+        }
+
+        .vu-meter-mark {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 9px;
+            color: #c49564;
+            font-weight: 500;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .vu-meter-mark .tick {
+            width: 2px;
+            height: 10px;
+            background: #c49564;
+            margin-bottom: 3px;
+        }
+
+        .vu-meter-mark.red-zone {
+            color: #b8453d;
+        }
+
+        .vu-meter-mark.red-zone .tick {
+            background: #b8453d;
+            height: 12px;
+        }
+
+        .vu-meter-mark.zero {
+            font-weight: 600;
+            font-size: 10px;
+        }
+
+        .vu-meter-needle-container {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 750px;
+            height: 25px;
+        }
+
+        .vu-meter-needle {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 3px;
+            height: 40px;
+            background: linear-gradient(180deg, #d4a574 0%, #c49564 100%);
+            transform-origin: bottom center;
+            transform: translateX(-50%) rotate(-45deg);
+            transition: transform 0.05s ease-out;
+            box-shadow: 0 0 8px rgba(212, 165, 116, 0.8), 0 0 4px rgba(212, 165, 116, 0.6);
+            border-radius: 1px;
+        }
+
+        /* ====================================================================
+           TITLE SECTION
+           ==================================================================== */
+
+        .title-section {
+            height: 70px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 15px 0;
+        }
+
+        .plugin-title {
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: #d4a574;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8), 0 0 12px rgba(212, 165, 116, 0.3);
+        }
+
+        /* ====================================================================
+           KNOBS SECTION
+           ==================================================================== */
+
+        .knobs-section {
+            height: 160px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 70px;
+            padding-top: 10px;
+        }
+
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .knob {
+            width: 90px;
+            height: 90px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.05s ease;
+        }
+
+        .knob:hover {
+            transform: scale(1.005);
+        }
+
+        .knob:active {
+            transform: scale(0.995);
+        }
+
+        .knob-body {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: radial-gradient(circle at 35% 35%, #3a2a1a 0%, #2f2015 60%, #1a0a00 100%);
+            box-shadow:
+                0 8px 16px rgba(0, 0, 0, 0.8),
+                0 4px 8px rgba(0, 0, 0, 0.6),
+                0 -2px 4px rgba(212, 165, 116, 0.1),
+                inset 0 4px 8px rgba(0, 0, 0, 0.6),
+                inset 0 -2px 4px rgba(212, 165, 116, 0.15);
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        /* Brushed dark metal texture - STATIC */
+        .knob-body::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 70%;
+            height: 70%;
+            border-radius: 50%;
+            background:
+                linear-gradient(135deg, transparent 0%, rgba(212, 165, 116, 0.05) 50%, transparent 100%),
+                radial-gradient(circle at 40% 40%, #3a2a1a 0%, #2f2015 50%, #251810 100%);
+            box-shadow:
+                inset 0 2px 4px rgba(0, 0, 0, 0.5),
+                inset 0 -1px 2px rgba(212, 165, 116, 0.2);
+        }
+
+        .knob-rotatable {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            transform-origin: center center;
+            transition: transform 0.05s ease-out;
+        }
+
+        /* Raised gold indicator line - ROTATES */
+        .knob-rotatable::after {
+            content: '';
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            width: 4px;
+            height: 35px;
+            background: linear-gradient(180deg, #d4a574 0%, #c49564 100%);
+            transform: translateX(-50%);
+            border-radius: 2px;
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.6),
+                0 0 8px rgba(212, 165, 116, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .knob-label {
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: #c49564;
+            text-align: center;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        /* ====================================================================
+           VERTICAL TOGGLE SWITCH (PRE/POST) - Between Drive and Filter
+           ==================================================================== */
+
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding-top: 0;
+        }
+
+        .toggle-label-top {
+            font-size: 8px;
+            font-weight: 500;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #c49564;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            margin-bottom: 4px;
+        }
+
+        .vertical-toggle-switch {
+            width: 32px;
+            height: 90px;
+            background: #1a0a00;
+            border: 2px solid #3a2a1a;
+            border-radius: 16px;
+            position: relative;
+            cursor: pointer;
+            box-shadow:
+                inset 0 2px 4px rgba(0, 0, 0, 0.6),
+                0 2px 4px rgba(0, 0, 0, 0.4);
+            transition: background 0.2s ease;
+        }
+
+        .vertical-toggle-switch:hover {
+            background: #251510;
+        }
+
+        .vertical-toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            background: radial-gradient(circle at 35% 35%, #d4a574 0%, #c49564 60%, #a08050 100%);
+            border-radius: 50%;
+            transition: transform 0.2s ease;
+            box-shadow:
+                0 2px 4px rgba(0, 0, 0, 0.6),
+                0 0 6px rgba(212, 165, 116, 0.4);
+        }
+
+        .vertical-toggle-switch.active .vertical-toggle-slider {
+            transform: translateX(-50%) translateY(59px);
+        }
+
+        .toggle-state-labels {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            pointer-events: none;
+        }
+
+        .toggle-state-label {
+            font-size: 7px;
+            font-weight: 600;
+            letter-spacing: 0.15em;
+            text-transform: uppercase;
+            color: #c49564;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+            opacity: 0.5;
+            transition: opacity 0.2s ease;
+        }
+
+        .vertical-toggle-switch:not(.active) .toggle-state-label.pre {
+            opacity: 1;
+        }
+
+        .vertical-toggle-switch.active .toggle-state-label.post {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="plugin-container">
+        <div class="content-block">
+            <!-- VU Meter Section -->
+            <div class="vu-meter-section">
+                <div class="vu-meter">
+                    <div class="vu-meter-scale">
+                        <div class="vu-meter-markings">
+                            <div class="vu-meter-mark"><div class="tick"></div><span>-20</span></div>
+                            <div class="vu-meter-mark"><div class="tick"></div><span>-10</span></div>
+                            <div class="vu-meter-mark"><div class="tick"></div><span>-7</span></div>
+                            <div class="vu-meter-mark"><div class="tick"></div><span>-5</span></div>
+                            <div class="vu-meter-mark"><div class="tick"></div><span>-3</span></div>
+                            <div class="vu-meter-mark zero"><div class="tick"></div><span>0</span></div>
+                            <div class="vu-meter-mark red-zone"><div class="tick"></div><span>+1</span></div>
+                            <div class="vu-meter-mark red-zone"><div class="tick"></div><span>+2</span></div>
+                            <div class="vu-meter-mark red-zone"><div class="tick"></div><span>+3</span></div>
+                        </div>
+                    </div>
+                    <div class="vu-meter-needle-container">
+                        <div class="vu-meter-needle" id="vuNeedle"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Title Section -->
+            <div class="title-section">
+                <div class="plugin-title">DRIVE VERB</div>
+            </div>
+
+            <!-- Knobs Section -->
+            <div class="knobs-section">
+                <!-- REVERB GROUP -->
+                <div class="knob-container">
+                    <div class="knob" id="sizeKnob">
+                        <div class="knob-body"></div>
+                        <div class="knob-rotatable" id="sizeRotatable"></div>
+                    </div>
+                    <div class="knob-label">SIZE</div>
+                </div>
+
+                <div class="knob-container">
+                    <div class="knob" id="decayKnob">
+                        <div class="knob-body"></div>
+                        <div class="knob-rotatable" id="decayRotatable"></div>
+                    </div>
+                    <div class="knob-label">DECAY</div>
+                </div>
+
+                <div class="knob-container">
+                    <div class="knob" id="dryWetKnob">
+                        <div class="knob-body"></div>
+                        <div class="knob-rotatable" id="dryWetRotatable"></div>
+                    </div>
+                    <div class="knob-label">DRY/WET</div>
+                </div>
+
+                <!-- TONE GROUP -->
+                <div class="knob-container">
+                    <div class="knob" id="driveKnob">
+                        <div class="knob-body"></div>
+                        <div class="knob-rotatable" id="driveRotatable"></div>
+                    </div>
+                    <div class="knob-label">DRIVE</div>
+                </div>
+
+                <!-- Vertical Toggle Switch (between Drive and Filter) -->
+                <div class="toggle-container">
+                    <div class="toggle-label-top">FILTER</div>
+                    <div class="vertical-toggle-switch active" id="filterPositionToggle">
+                        <div class="vertical-toggle-slider"></div>
+                        <div class="toggle-state-labels">
+                            <span class="toggle-state-label pre">PRE</span>
+                            <span class="toggle-state-label post">POST</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="knob-container">
+                    <div class="knob" id="filterKnob">
+                        <div class="knob-body"></div>
+                        <div class="knob-rotatable" id="filterRotatable"></div>
+                    </div>
+                    <div class="knob-label">FILTER</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        // ====================================================================
+        // BROWSER TEST MODE - MOCK JUCE BACKEND
+        // ====================================================================
+
+        console.log("DriveVerb v3 UI - Browser Test Mode");
+
+        // Mock JUCE backend for browser testing
+        const mockParameters = {
+            size: 0.4,      // 40%
+            decay: 0.158,   // 2s (0.5 to 10s, logarithmic scale)
+            dryWet: 0.3,    // 30%
+            drive: 0.25,    // 6dB out of 24dB
+            filter: 0.5,    // 0% (center position, -100 to +100)
+            filterPosition: 1  // 0 = PRE, 1 = POST
+        };
+
+        // ====================================================================
+        // NATIVE APPLICATION FEEL (JavaScript)
+        // ====================================================================
+
+        // Disable right-click context menu
+        document.addEventListener("contextmenu", (e) => {
+            e.preventDefault();
+            return false;
+        });
+
+        // Disable default drag behaviors
+        document.addEventListener("dragstart", (e) => {
+            e.preventDefault();
+        });
+
+        // ====================================================================
+        // KNOB INTERACTION SETUP
+        // ====================================================================
+
+        function setupKnob(knobId, rotatableId, paramName) {
+            const knob = document.getElementById(knobId);
+            const rotatable = document.getElementById(rotatableId);
+
+            let isDragging = false;
+            let startY = 0;
+            let startValue = 0;
+
+            knob.addEventListener("mousedown", (e) => {
+                isDragging = true;
+                startY = e.clientY;
+                startValue = mockParameters[paramName];
+                e.preventDefault();
+            });
+
+            document.addEventListener("mousemove", (e) => {
+                if (!isDragging) return;
+
+                const deltaY = startY - e.clientY;
+                const sensitivity = 0.005;
+                let newValue = startValue + (deltaY * sensitivity);
+                newValue = Math.max(0, Math.min(1, newValue));
+
+                mockParameters[paramName] = newValue;
+                updateKnobVisual(rotatable, newValue);
+
+                // Update VU meter based on drive knob
+                if (paramName === 'drive') {
+                    const driveDB = newValue * 24.0;  // 0-24dB
+                    updateVUMeter(driveDB - 12);  // Center around 0dB on meter
+                }
+
+                console.log(`${paramName}:`, newValue.toFixed(3));
+            });
+
+            document.addEventListener("mouseup", () => {
+                if (isDragging) {
+                    isDragging = false;
+                }
+            });
+
+            // Initialize visual
+            updateKnobVisual(rotatable, mockParameters[paramName]);
+        }
+
+        function updateKnobVisual(rotatable, value) {
+            const minAngle = -135;
+            const maxAngle = 135;
+            const angle = minAngle + (value * (maxAngle - minAngle));
+            rotatable.style.transform = `rotate(${angle}deg)`;
+        }
+
+        // Setup all knobs (NEW ORDER: Size, Decay, Dry/Wet, Drive, Filter)
+        setupKnob("sizeKnob", "sizeRotatable", "size");
+        setupKnob("decayKnob", "decayRotatable", "decay");
+        setupKnob("dryWetKnob", "dryWetRotatable", "dryWet");
+        setupKnob("driveKnob", "driveRotatable", "drive");
+        setupKnob("filterKnob", "filterRotatable", "filter");
+
+        // ====================================================================
+        // VERTICAL TOGGLE SWITCH (PRE/POST)
+        // ====================================================================
+
+        const filterPositionToggle = document.getElementById("filterPositionToggle");
+
+        // Initialize toggle state (POST = active)
+        if (mockParameters.filterPosition === 1) {
+            filterPositionToggle.classList.add("active");
+        }
+
+        filterPositionToggle.addEventListener("click", () => {
+            mockParameters.filterPosition = mockParameters.filterPosition === 0 ? 1 : 0;
+            filterPositionToggle.classList.toggle("active");
+
+            const state = mockParameters.filterPosition === 0 ? "PRE" : "POST";
+            console.log(`filterPosition: ${state}`);
+        });
+
+        // ====================================================================
+        // VU METER UPDATE
+        // ====================================================================
+
+        const vuNeedle = document.getElementById("vuNeedle");
+        let currentNeedleAngle = -45;
+        let targetNeedleAngle = -45;
+
+        function updateVUMeter(dbLevel) {
+            const minDB = -20;
+            const maxDB = 3;
+
+            const clampedDB = Math.max(minDB, Math.min(maxDB, dbLevel));
+            const normalizedLevel = (clampedDB - minDB) / (maxDB - minDB);
+
+            targetNeedleAngle = -45 + (normalizedLevel * 90);
+        }
+
+        function animateVUMeter() {
+            const attackSpeed = 0.4;
+            const decaySpeed = 0.15;
+
+            if (currentNeedleAngle < targetNeedleAngle) {
+                currentNeedleAngle += (targetNeedleAngle - currentNeedleAngle) * attackSpeed;
+            } else {
+                currentNeedleAngle += (targetNeedleAngle - currentNeedleAngle) * decaySpeed;
+            }
+
+            vuNeedle.style.transform = `translateX(-50%) rotate(${currentNeedleAngle}deg)`;
+            requestAnimationFrame(animateVUMeter);
+        }
+
+        // Start VU meter animation
+        animateVUMeter();
+
+        // Initialize VU meter position based on default drive value
+        const initialDriveDB = mockParameters.drive * 24.0;
+        updateVUMeter(initialDriveDB - 12);
+
+        // ====================================================================
+        // INITIALIZATION COMPLETE
+        // ====================================================================
+
+        console.log("DriveVerb v3 UI initialized (browser test mode)");
+        console.log("Mock parameters:", mockParameters);
+        console.log("Parameter order: Size → Decay → Dry/Wet | Drive → Filter Toggle → Filter");
+    </script>
+</body>
+</html>

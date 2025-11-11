@@ -1,0 +1,23 @@
+{
+  "id": "vintage-hardware-001",
+  "name": "Vintage Hardware",
+  "description": "Warm analog hardware with brass controls, vintage VU meters, and retro earth-tone palette",
+  "sourcePlugin": "DriveVerb",
+  "sourceVersion": "v3",
+  "created": "2025-11-11T20:00:00Z",
+  "usedInPlugins": ["DriveVerb"],
+  "tags": [
+    "vintage",
+    "warm",
+    "skeuomorphic",
+    "brass",
+    "retro",
+    "analog",
+    "hardware",
+    "earth-tones",
+    "1960s",
+    "1970s",
+    "vu-meter",
+    "tactile"
+  ]
+}
