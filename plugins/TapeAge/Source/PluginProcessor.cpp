@@ -51,16 +51,31 @@ void TapeAgeAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     currentSpec.sampleRate = sampleRate;
     currentSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
     currentSpec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
+    currentSampleRate = sampleRate;
 
     // Phase 4.1: Prepare oversampling engine
     oversampler.initProcessing(static_cast<size_t>(samplesPerBlock));
     oversampler.reset();
+
+    // Phase 4.2: Prepare wow/flutter modulation
+    // 200ms delay line buffer for pitch modulation (architecture.md line 28)
+    int delaySamples = static_cast<int>(sampleRate * 0.2);
+    delayLine.setMaximumDelayInSamples(delaySamples);
+    delayLine.prepare(currentSpec);
+    delayLine.reset();
+
+    // Initialize random phase offsets per channel for stereo width
+    lfoPhase[0] = random.nextFloat() * juce::MathConstants<float>::twoPi;
+    lfoPhase[1] = random.nextFloat() * juce::MathConstants<float>::twoPi;
 }
 
 void TapeAgeAudioProcessor::releaseResources()
 {
     // Phase 4.1: Reset DSP components
     oversampler.reset();
+
+    // Phase 4.2: Reset wow/flutter modulation
+    delayLine.reset();
 }
 
 void TapeAgeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -122,6 +137,56 @@ void TapeAgeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     // Downsample back to original sample rate
     oversampler.processSamplesDown(block);
+
+    // Phase 4.2: Wow/Flutter Modulation
+    // Processing chain: Apply pitch modulation via delay line after saturation
+    // Read age parameter (0.0 to 1.0)
+    auto* ageParam = parameters.getRawParameterValue("age");
+    float age = ageParam->load();
+
+    // Calculate LFO modulation depth based on age
+    // Architecture.md: ±10 cents at max age (pitch ratio = 2^(cents/1200))
+    // ±10 cents = 2^(10/1200) = 1.005777895 (~0.58% pitch variation)
+    const float maxPitchVariationCents = 10.0f;
+    const float pitchVariationRatio = std::pow(2.0f, maxPitchVariationCents / 1200.0f) - 1.0f;  // ~0.005777895
+    float modulationDepth = age * pitchVariationRatio;
+
+    // LFO frequency: 0.5-2Hz (architecture.md line 29)
+    // Use 1.0Hz as base frequency, scaled by age for subtle variation
+    const float lfoFrequency = 1.0f + age;  // 1.0-2.0Hz range
+    const float lfoPhaseIncrement = (lfoFrequency * juce::MathConstants<float>::twoPi) / static_cast<float>(currentSampleRate);
+
+    // Process each channel
+    const int numSamples = buffer.getNumSamples();
+    const int numChannels = buffer.getNumChannels();
+
+    for (int channel = 0; channel < numChannels; ++channel)
+    {
+        auto* channelData = buffer.getWritePointer(channel);
+
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            // Calculate LFO modulation (sine wave)
+            float lfoValue = std::sin(lfoPhase[channel]);
+
+            // Calculate delay time in samples
+            // Base delay at center of buffer (100ms) + modulation
+            float baseDelaySamples = static_cast<float>(currentSampleRate) * 0.1f;  // 100ms center
+            float modulationSamples = lfoValue * modulationDepth * baseDelaySamples;
+            float totalDelay = baseDelaySamples + modulationSamples;
+
+            // Push input sample to delay line
+            delayLine.pushSample(channel, channelData[sample]);
+
+            // Read modulated sample from delay line
+            channelData[sample] = delayLine.popSample(channel, totalDelay);
+
+            // Advance LFO phase
+            lfoPhase[channel] += lfoPhaseIncrement;
+            if (lfoPhase[channel] >= juce::MathConstants<float>::twoPi)
+                lfoPhase[channel] -= juce::MathConstants<float>::twoPi;
+        }
+    }
 }
 
 juce::AudioProcessorEditor* TapeAgeAudioProcessor::createEditor()

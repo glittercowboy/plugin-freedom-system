@@ -37,6 +37,12 @@ private:
     // Phase 4.1: Core Saturation Processing
     juce::dsp::Oversampling<float> oversampler { 2, 1, juce::dsp::Oversampling<float>::filterHalfBandFIREquiripple };
 
+    // Phase 4.2: Wow/Flutter Modulation
+    juce::dsp::DelayLine<float, juce::dsp::DelayLineInterpolationTypes::Lagrange3rd> delayLine;
+    float lfoPhase[2] { 0.0f, 0.0f };  // Separate phase per channel for stereo width
+    juce::Random random;
+    double currentSampleRate { 44100.0 };
+
     // APVTS comes AFTER DSP components
     juce::AudioProcessorValueTreeState parameters;
 

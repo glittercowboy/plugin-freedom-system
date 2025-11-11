@@ -26,6 +26,7 @@
 |-------------|--------|---------|--------------|
 | GainKnob | 📦 Installed | 1.2.3 | 2025-11-10 |
 | TapeAge | 💡 Ideated | - | 2025-11-10 |
+| ClapMachine | 💡 Ideated | - | 2025-11-10 |
 
 ### GainKnob
 
@@ -106,6 +107,55 @@ Vintage tape saturator with warm saturation and musical degradation (wow/flutter
 - **2025-11-10 (Stage 1):** Planning - Complexity 5.0 (phased implementation)
 - **2025-11-10 (Stage 2):** Foundation complete - build system operational
 - **2025-11-10 (Stage 3):** Shell complete - 3 parameters implemented
+
+**Known Issues:**
+- None
+
+**Last Updated:** 2025-11-10
+
+### ClapMachine
+
+**Status:** 💡 **Ideated**
+**Created:** 2025-11-10
+**Type:** Synth (Instrument)
+
+**Description:**
+The definitive 808-style clap synthesizer with dual-section architecture (flam + noise body) and independent multimode filtering. Designed to be "the only clap you'd ever need for house music."
+
+**Parameters (18 total):**
+
+Flam Section:
+- Timing Spread: 0-100ms, default 15ms (time spread between layers)
+- Layer Count: 2-5, default 3 (stepped knob)
+- Stereo Width: 0-100%, default 50% (mono to wide spread)
+- Filter Cutoff: 20Hz-20kHz, default 8kHz
+- Filter Resonance: 0-100%, default 10%
+- Filter Mode: LP/BP/HP, default LP (selector)
+
+Body Section:
+- Noise Type: White/Pink/Brown, default Pink (selector)
+- Tone/Color: 0-100%, default 50% (brightness)
+- Decay/Release: 10ms-2s, default 200ms
+- Filter Cutoff: 20Hz-20kHz, default 5kHz
+- Filter Resonance: 0-100%, default 5%
+- Filter Mode: LP/BP/HP, default LP (selector)
+
+Mix/Output:
+- Flam/Body Balance: 0-100%, default 50%
+- Drive: 0-100%, default 0% (saturation)
+- Pitch: -24 to +24 semitones, default 0
+- Output Level: -inf to 0dB, default -6dB
+
+**DSP:** Dual-section synthesis - flam generator (2-5 layered transients with timing spread and stereo width) + noise body generator (white/pink/brown with envelope). Independent multimode filters (LP/BP/HP + resonance) per section. Mix stage with drive/saturation and pitch shifting.
+
+**GUI:** Dual-panel layout with visual separation. Left: Flam controls. Right: Body controls. Center/bottom: Mix controls. 808-inspired vintage aesthetic with modern clarity.
+
+**MIDI:** Velocity controls volume only. Wide pitch range (+/- 2 octaves) for creative use.
+
+**Presets:** 3-5 starting points (Tight House, Classic 808, Wide & Loose, Bright & Punchy, Dark & Deep)
+
+**Lifecycle Timeline:**
+- **2025-11-10:** Creative brief completed
 
 **Known Issues:**
 - None
