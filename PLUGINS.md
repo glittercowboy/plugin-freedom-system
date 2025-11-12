@@ -189,10 +189,11 @@ Mix/Output:
 
 ### DriveVerb
 
-**Status:** ✅ **Working**
+**Status:** 📦 **Installed**
 **Version:** 1.0.0
 **Created:** 2025-11-11
 **Completed:** 2025-11-12
+**Installed:** 2025-11-12
 **Type:** Audio Effect (Reverb)
 **Complexity:** 5.0 / 5.0 (maximum - phased implementation)
 
@@ -238,6 +239,10 @@ Algorithmic reverb with warm tape saturation applied only to the wet signal, plu
 - ✓ Manual testing: All 6 parameters functional, PRE/POST routing audible, VU meter responsive
 
 **Formats:** VST3, AU, Standalone
+
+**Installation Locations:**
+- VST3: `~/Library/Audio/Plug-Ins/VST3/DriveVerb.vst3` (4.2 MB)
+- AU: `~/Library/Audio/Plug-Ins/Components/DriveVerb.component` (4.1 MB)
 
 **Known Issues:**
 - None
