@@ -142,7 +142,9 @@
 
 **Duration:** 30 min
 
-### Phase 5.2: Toggle Switch + VU Meter
+### Phase 5.2: Toggle Switch + VU Meter ✓
+
+**Completed:** 2025-11-12T14:00:00Z
 
 **Goal:** Add filter position toggle and drive VU meter
 
@@ -153,13 +155,13 @@
 - Meter animation/smoothing
 
 **Test Criteria:**
-- [ ] Toggle switch displays correctly between Drive and Filter knobs
-- [ ] Toggle switches between PRE/POST states
-- [ ] Toggle parameter updates DSP routing
-- [ ] VU meter shows drive saturation level
-- [ ] Meter responds to audio signal (not static)
-- [ ] Meter peak hold behavior (if applicable)
-- [ ] All 6 parameters functional
+- [x] Toggle switch displays correctly between Drive and Filter knobs
+- [x] Toggle switches between PRE/POST states
+- [x] Toggle parameter updates DSP routing
+- [x] VU meter shows drive saturation level
+- [x] Meter responds to audio signal (not static)
+- [x] Meter ballistic motion (fast attack 0.4, slow decay 0.15)
+- [x] All 6 parameters functional
 
 **Duration:** 20 min
 
