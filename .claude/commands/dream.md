@@ -15,41 +15,31 @@ argument-hint: "[concept or PluginName?]"
   </parameter>
 </argument_handling>
 
-<routing_protocol>
-  <case condition="no_argument">
-    <step order="1">Present discovery menu with 5 options</step>
-    <menu>
-What would you like to explore?
+## Routing
 
-1. New plugin idea
-2. Improve existing plugin
-3. Create UI mockup
-4. Create aesthetic template
-5. Research problem
-    </menu>
-    <step order="2">Capture user selection (1-5)</step>
-    <step order="3">Invoke corresponding skill via Skill tool using routing table</step>
+**If no argument provided:**
+1. Present discovery menu with 5 options:
+   ```
+   What would you like to explore?
 
-    <skill_mapping>
-      <option id="1" skill="plugin-ideation" mode="new"/>
-      <option id="2" skill="plugin-ideation" mode="improvement"/>
-      <option id="3" skill="ui-mockup"/>
-      <option id="4" skill="aesthetic-dreaming"/>
-      <option id="5" skill="deep-research"/>
-    </skill_mapping>
-  </case>
+   1. New plugin idea
+   2. Improve existing plugin
+   3. Create UI mockup
+   4. Create aesthetic template
+   5. Research problem
+   ```
+2. Capture user selection (1-5)
+3. Invoke corresponding skill via Skill tool:
+   - Option 1 → plugin-ideation skill (new mode)
+   - Option 2 → plugin-ideation skill (improvement mode)
+   - Option 3 → ui-mockup skill
+   - Option 4 → aesthetic-dreaming skill
+   - Option 5 → deep-research skill
 
-  <case condition="plugin_name_provided">
-    <step order="1">Check PLUGINS.md for plugin existence</step>
-    <if_exists>
-      <step order="2">Present plugin-specific menu (improvement, mockup, research)</step>
-      <step order="3">Invoke selected skill with plugin context</step>
-    </if_exists>
-    <if_not_exists>
-      <step order="2">Invoke plugin-ideation skill with concept as seed</step>
-    </if_not_exists>
-  </case>
-</routing_protocol>
+**If plugin name provided:**
+1. Check PLUGINS.md for plugin existence
+2. If exists: Present plugin-specific menu (improvement, mockup, research) and invoke selected skill with plugin context
+3. If not exists: Invoke plugin-ideation skill with concept as seed
 
 ## Preconditions
 

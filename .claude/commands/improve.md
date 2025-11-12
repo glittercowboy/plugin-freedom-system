@@ -43,76 +43,30 @@ When user runs `/improve [PluginName] [description?]`, route based on argument p
 
 ## Routing
 
-<routing_logic>
-  <decision_gate type="argument_routing">
-    <path condition="no_plugin_name">
-      Read PLUGINS.md and filter for plugins with status ✅ Working OR 📦 Installed
+**If no plugin name provided:**
+1. Read PLUGINS.md and filter for plugins with status ✅ Working or 📦 Installed
+2. Display numbered menu: "Which plugin would you like to improve?"
+   - Example: 1. DriveVerb (📦 Installed), 2. CompressorPro (✅ Working), 3. Other (specify name)
+3. Wait for user selection
+4. After selection, proceed to "plugin name only" path
 
-      <menu_presentation>
-        Display: "Which plugin would you like to improve?"
+**If plugin name only (no description):**
+1. Check for existing improvement briefs in plugins/[PluginName]/improvements/*.md
+2. If briefs exist: Present menu with existing briefs + "Describe a new change" option
+3. If no briefs: Prompt "What would you like to improve in [PluginName]? Describe the change:"
+4. Wait for user response
+5. After description provided, proceed to vagueness check
 
-        [Numbered list of completed plugins with status emoji]
+**If plugin name and description provided:**
+1. Perform vagueness check (see Vagueness Detection section)
+2. If request is vague: Present vagueness handling menu
+3. If request is specific: Proceed to plugin-improve skill with Phase 0.5 investigation
 
-        Example:
-        1. DriveVerb (📦 Installed)
-        2. CompressorPro (✅ Working)
-        3. Other (specify name)
-
-        WAIT for user selection
-      </menu_presentation>
-
-      After selection, proceed to path condition="plugin_name_only"
-    </path>
-
-    <path condition="plugin_name_only">
-      Check for existing improvement briefs in plugins/[PluginName]/improvements/*.md
-
-      <decision_menu>
-        IF briefs exist:
-          Display:
-          "What would you like to improve in [PluginName]?
-
-          1. From existing brief: [brief-name-1].md
-          2. From existing brief: [brief-name-2].md
-          3. Describe a new change"
-
-        IF no briefs:
-          Display:
-          "What would you like to improve in [PluginName]?
-
-          Describe the change:"
-
-        WAIT for user response
-      </decision_menu>
-
-      After description provided, proceed to vagueness_check
-    </path>
-
-    <path condition="plugin_name_and_description">
-      Perform vagueness_check (see below)
-
-      <vagueness_check>
-        IF request is vague:
-          Present vagueness handling menu (see Vagueness Detection section)
-        ELSE IF request is specific:
-          Proceed to plugin-improve skill with Phase 0.5 investigation
-      </vagueness_check>
-    </path>
-  </decision_gate>
-
-  <skill_invocation trigger="after_routing_complete">
-    Once plugin name and specific description are obtained, invoke plugin-improve skill:
-
-    <invocation_syntax>
-      Use Skill tool: skill="plugin-improve"
-
-      Pass context:
-      - pluginName: [name]
-      - description: [specific change description]
-      - vagueness_resolution: [if applicable, which path user chose from vagueness menu]
-    </invocation_syntax>
-  </skill_invocation>
-</routing_logic>
+**Skill invocation:**
+Once plugin name and specific description are obtained, invoke the plugin-improve skill via Skill tool with:
+- pluginName: [name]
+- description: [specific change description]
+- vagueness_resolution: [if applicable, which path user chose from vagueness menu]
 
 ## Vagueness Detection
 

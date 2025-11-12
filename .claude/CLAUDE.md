@@ -1,5 +1,37 @@
 # PLUGIN FREEDOM SYSTEM - Plugin Development System
 
+## Terms Explained (Plain-Language Glossary)
+
+When technical terms appear in the system, they refer to these concepts:
+
+**Audio Plugin Terms:**
+- **APVTS** → Parameter System (handles knobs, sliders, and switches in the plugin UI)
+- **VST3/AU** → Plugin Format (how DAWs like Logic Pro or Ableton load your plugin)
+- **pluginval** → Validation Tool (automated testing tool that checks for crashes and errors)
+- **processBlock** → Audio Processing Function (the main function that processes audio samples)
+- **DSP** → Audio Processing Engine (the code that transforms audio signals)
+
+**JUCE Framework Terms:**
+- **JUCE** → Cross-Platform Audio Framework (C++ library for building audio plugins)
+- **WebView** → Modern UI System (lets you build plugin interfaces using HTML/CSS/JavaScript)
+- **Standalone** → Desktop Application Mode (run plugin as standalone app, not in DAW)
+
+**Workflow Terms:**
+- **Stage 0-6** → Development Phases (Research → Planning → Foundation → Shell → DSP → GUI → Validation)
+- **Contract Files** → Design Documents (creative-brief.md, parameter-spec.md, architecture.md, plan.md)
+- **Checkpoint** → Progress Save Point (commit code, update state, present decision menu)
+- **Subagent** → Specialized Worker (focused AI agent for specific implementation stage)
+
+**System Terms:**
+- **Drift** → Design Mismatch (when mockup doesn't match creative brief)
+- **Tier** → Investigation Complexity Level (how deep to analyze a problem: quick/moderate/deep)
+- **Required Reading** → Critical Patterns (juce8-critical-patterns.md - common mistakes to avoid)
+
+When these terms appear in the system, the plain-language equivalent will be shown on first use:
+- Example: "Setting up APVTS (Parameter System - handles your knobs and sliders)..."
+- Example: "Running pluginval (Validation Tool - checks for crashes)..."
+- Example: "Building VST3 (Plugin Format - how DAWs load your plugin)..."
+
 ## System Components
 
 - **Scripts**: `scripts/` - Build and installation automation

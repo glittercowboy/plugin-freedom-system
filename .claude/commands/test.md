@@ -33,46 +33,22 @@ Use /implement [PluginName] to build it first.
 
 ## Three Test Methods
 
-<routing_logic>
-  <mode name="automated" argument="automated">
-    <requirement path="plugins/{PluginName}/Tests/" type="directory" />
-    <routes_to skill="plugin-testing" />
-    <duration estimate="2 minutes" />
-    <tests>
-      - Parameter stability (all combinations, edge cases)
-      - State save/restore (preset corruption)
-      - Processing stability (buffer sizes, sample rates)
-      - Thread safety (concurrent access)
-      - Edge case handling (silence, extremes, denormals)
-    </tests>
-  </mode>
+**Mode: automated (plugin-testing skill)**
+- **Requirement:** plugins/{PluginName}/Tests/ directory exists
+- **Invocation:** Invoke the plugin-testing skill via Skill tool
+- **Duration:** ~2 minutes
+- **Tests:** Parameter stability (all combinations, edge cases), state save/restore (preset corruption), processing stability (buffer sizes, sample rates), thread safety (concurrent access), edge case handling (silence, extremes, denormals)
 
-  <mode name="build" argument="build">
-    <requirement>Always available (no dependencies)</requirement>
-    <routes_to skill="build-automation" />
-    <duration estimate="5-10 minutes" />
-    <steps>
-      1. Build Release mode (VST3 + AU)
-      2. Run pluginval with strict settings (level 10)
-      3. Install to system folders
-      4. Clear DAW caches
-    </steps>
-  </mode>
+**Mode: build (build-automation skill)**
+- **Requirement:** Always available (no dependencies)
+- **Invocation:** Invoke the build-automation skill via Skill tool
+- **Duration:** 5-10 minutes
+- **Steps:** Build Release mode (VST3 + AU), run pluginval validation tool with strict settings (level 10), install to system folders, clear DAW caches
 
-  <mode name="manual" argument="manual">
-    <requirement>Always available</requirement>
-    <routes_to>Display checklist directly (no skill invocation)</routes_to>
-    <checklist_items>
-      - Load & initialize
-      - Audio processing
-      - Parameter testing
-      - State management
-      - Performance
-      - Compatibility
-      - Stress testing
-    </checklist_items>
-  </mode>
-</routing_logic>
+**Mode: manual (checklist only)**
+- **Requirement:** Always available
+- **Invocation:** Display checklist directly (no skill invocation)
+- **Checklist items:** Load & initialize, audio processing, parameter testing, state management, performance, compatibility, stress testing
 
 ## Behavior
 

@@ -26,8 +26,9 @@ preconditions:
 **STOP:** Do NOT proceed to Phase B until user approves design via Phase 5.5 decision menu.
 
 **Gate criteria:**
-- User selected option 3 or 5 from Phase 5.5 menu ("Finalize...")
-- Design validated against WebView constraints
+- User selected option 2 from Phase 5.5 menu ("Finalize")
+- Design validated against WebView constraints (Phase 5.3)
+- Design validated against creative brief (Phase 5.6 automatic validation)
 </decision_gate>
 </phase>
 
@@ -453,54 +454,89 @@ Files generated:
 - v[N]-ui.yaml (design specification)
 - v[N]-ui-test.html (browser-testable mockup)
 
-What do you think?
-1. Check alignment - Run design-sync validation (recommended before finalizing)
-2. Provide refinements (iterate on design) ← Creates v[N+1]
-3. Finalize and create implementation files (if satisfied and aligned)
-4. Save as aesthetic template (add to library for reuse)
-5. Finalize AND save aesthetic (do both operations)
-6. Test in browser (open v[N]-ui-test.html)
-7. Validate WebView constraints (run checks)
-8. Other
+What would you like to do?
 
-Choose (1-8): _
+1. Iterate - Refine design, adjust layout
+2. Finalize - Validate alignment and complete mockup
+3. Save as template - Add to aesthetic library for reuse
+4. Other
+
+Choose (1-4): _
 ```
 </menu_presentation>
 
 <conditional_execution requires="user_choice">
 **Execution routing:**
-- IF user chose option 3 or 5 (finalize) THEN proceed to Phase 6
-- IF user chose option 2 (refine) THEN return to Phase 2 with v[N+1]
-- IF user chose option 1 (check alignment) THEN invoke design-sync skill
+- IF user chose option 2 (finalize) THEN proceed to Phase 5.6 (automatic validation)
+- IF user chose option 1 (iterate) THEN return to Phase 2 with v[N+1]
+- IF user chose option 3 (save template) THEN invoke ui-template-library skill
 - ELSE handle custom options
 
 **DO NOT proceed to Phase 6 unless user explicitly chose finalization option.**
 
 **Option handling:**
-- **Option 1**: Check alignment → Invoke design-sync skill to validate mockup ↔ creative brief consistency
+
+- **Option 1: Iterate** → User gives feedback → Return to Phase 2 with new version number (v2, v3, etc.)
+
+- **Option 2: Finalize** → Proceed to Phase 5.6 (automatic validation gate)
+  - MANDATORY: Automatically invoke design-sync skill to validate mockup ↔ creative brief consistency
   - Detects drift (parameter mismatches, missing features, style divergence)
   - User resolves any issues within design-sync
-  - **design-sync routes back to Phase 5.5 decision menu after completion** (see design-sync Step 7)
-- **Option 2**: User gives feedback → Return to Phase 2 with new version number (v2, v3, etc.)
-- **Option 3**: User approves → Proceed to Phase 6-10 (generate remaining 5 files + finalize state)
-- **Option 4**: Save aesthetic → Invoke ui-template-library skill with "save" operation
+  - **design-sync routes back to Phase 5.5 decision menu if issues found**
+  - Only proceed to Phase 6-10 if validation passes or user overrides
+  - See Phase 5.6 for validation protocol
+
+- **Option 3: Save as template** → Invoke ui-template-library skill with "save" operation
   ```
   Invoke Skill tool:
   - skill: "ui-template-library"
-  - prompt: "Save aesthetic from plugins/[PluginName]/.ideas/mockups/v[N]-ui.html"
+  - prompt: "Save aesthetic from plugins/[PluginName]/.ideas/mockups/v[N]-ui-test.html"
   ```
-  After saving, return to decision menu
-- **Option 5**: Save aesthetic first, then proceed to Phase 6-10
-  ```
-  1. Invoke ui-template-library "save" operation
-  2. Wait for confirmation
-  3. Proceed to Phase 6-10 (generate implementation files)
-  ```
-- **Option 6**: Offer to open test HTML in browser for interactive review
-- **Option 7**: Validate WebView constraints (run Phase 5.3 checks again)
-- **Option 8**: Other
+  After saving, return to Phase 5.5 decision menu
+
+- **Option 4: Other** → Collect free-form text, handle custom request (test in browser, validate WebView constraints, etc.)
 </conditional_execution>
 </decision_gate>
+
+---
+
+<validation_gate id="phase_5_6_automatic_validation" blocking="true" requires_gate="phase_5_5_approval">
+## Phase 5.6: Automatic Design Validation (Finalize Gate)
+
+**Purpose:** Mandatory validation before generating implementation files. Prevents drift and ensures alignment.
+
+**Trigger:** User selected "Finalize" option in Phase 5.5
+
+**Protocol:**
+
+1. **Invoke design-sync skill automatically:**
+   ```
+   Invoke Skill tool:
+   - skill: "design-sync"
+   - context: "Automatic validation before finalization"
+   ```
+
+2. **Handle validation results:**
+
+   **If validation passes (no drift):**
+   - Proceed directly to Phase 6-10 (generate implementation files)
+
+   **If drift detected:**
+   - design-sync skill presents drift findings and resolution options
+   - User chooses resolution (update mockup, update brief, override, review)
+   - **If user updates mockup:** Return to Phase 5.5 with updated design
+   - **If user updates brief:** Continue to Phase 6-10 with updated contracts
+   - **If user overrides:** Log override decision, continue to Phase 6-10
+   - **If user reviews:** Present findings, then return to Phase 5.5
+
+3. **Skip validation only if:**
+   - No creative-brief.md exists (standalone mockup mode)
+   - In that case, proceed directly to Phase 6-10
+
+**Why mandatory:** Catches misalignment before generating 5 implementation files. Prevents wasted work and ensures contracts match design.
+
+**Fallback:** If design-sync skill unavailable, warn user and proceed with manual confirmation.
+</validation_gate>
 
 ---
 

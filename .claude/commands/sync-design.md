@@ -6,36 +6,23 @@ argument-hint: "[PluginName]"
 
 # /sync-design
 
-<routing_logic>
-  <decision_gate type="precondition_check">
-    When user runs `/sync-design [PluginName?]`:
+## Routing
 
-    <phase_1_parameter_resolution>
-      IF no plugin name provided:
-        List eligible plugins (have creative-brief.md + mockup finalized)
-        Wait for user selection
-      ELSE:
-        Use provided plugin name
-    </phase_1_parameter_resolution>
+When user runs `/sync-design [PluginName?]`:
 
-    <phase_2_precondition_validation>
-      Verify required files exist (see <preconditions> below)
+**Phase 1: Parameter Resolution**
+- If no plugin name provided: List eligible plugins (have creative-brief.md + mockup finalized) and wait for user selection
+- If plugin name provided: Use provided plugin name
 
-      IF any files missing:
-        BLOCK - display error and guidance
-        DO NOT invoke skill
+**Phase 2: Precondition Validation**
+- Verify required files exist (see Preconditions section below)
+- If any files missing: Display error with guidance and stop (do not invoke skill)
+- If all files present: Proceed to Phase 3
 
-      IF all files present:
-        Proceed to Phase 3
-    </phase_2_precondition_validation>
-
-    <phase_3_skill_invocation>
-      Invoke design-sync skill via Skill tool with:
-      - Plugin name
-      - Paths to validated files
-    </phase_3_skill_invocation>
-  </decision_gate>
-</routing_logic>
+**Phase 3: Skill Invocation**
+Invoke the design-sync skill via Skill tool with:
+- Plugin name
+- Paths to validated files
 
 ## Purpose
 

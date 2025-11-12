@@ -227,31 +227,42 @@ Proceed to Phase 0.5 (Investigation) - perform fresh root cause analysis.
 
 </handoff_protocol>
 
-## Phase 0.5: Investigation (3-Tier)
+## Phase 0.5: Investigation (Auto-Tiered)
 
 **Purpose:** Find root causes, prevent band-aid fixes
 
-**Tier Selection Decision Tree:**
+**Automatic Tier Detection:**
+
+Analyze the request and automatically select investigation tier based on complexity indicators. Never ask the user which tier to use.
+
+**Detection algorithm:**
 
 ```
-Request analysis:
-├─ Known pattern match? → Tier 1
-├─ Single component issue? → Tier 2
-├─ Multi-component / Performance / Architecture? → Tier 3
-└─ Unclear? → Start Tier 1, escalate if needed
+Analysis:
+1. Check troubleshooting/ for known pattern → Tier 1
+2. Keywords: "cosmetic", "typo", "rename", "color", "text" → Tier 1
+3. Keywords: "crash", "performance", "architecture", "all plugins" → Tier 3
+4. Scope: Single file + clear symptom → Tier 2
+5. Scope: Multiple components OR unclear cause → Tier 3
+6. Default: Start Tier 1, escalate if needed
 ```
+
+Log selected tier for transparency: "Analyzing issue (quick investigation)..." or "Analyzing issue (deep investigation)..."
 
 **Tier 1 (5-10 min):** File read + pattern match
 - Cosmetic changes, simple fixes, obvious issues
 - Known patterns from troubleshooting/
+- **Indicators:** Simple wording, single-file scope, UI-only changes
 
 **Tier 2 (15-30 min):** Logic trace + integration check
 - Logic errors, parameter issues, integration bugs
 - Single component, requires code analysis
+- **Indicators:** Specific component mentioned, functional bug, parameter issue
 
 **Tier 3 (30-60 min):** Invoke deep-research skill (uses Opus)
 - Complex bugs, performance issues, architectural problems
 - Multi-component, requires deep investigation
+- **Indicators:** "crash", "all plugins", performance, architecture, unclear cause
 
 **Tier 1: Basic Code Inspection**
 

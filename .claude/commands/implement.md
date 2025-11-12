@@ -103,34 +103,19 @@ When user runs `/implement [PluginName?]`, invoke the plugin-workflow skill to b
 
 ## Behavior
 
-<routing>
-  <no_argument behavior="interactive_selection">
-    <query source="PLUGINS.md" filter="status in (🚧 Stage 1, 🚧 Stage 2-6)">
-      List plugins eligible for implementation:
-      - Status: 🚧 Stage 1 (ready to start)
-      - Status: 🚧 Stage 2-6 (in progress)
-    </query>
+**If no plugin name provided:**
+1. Read PLUGINS.md and filter for plugins with status 🚧 Stage 1 or 🚧 Stage 2-6
+2. Present numbered menu of eligible plugins with current stage
+3. Wait for user selection
 
-    <presentation format="numbered_menu">
-      Present numbered menu of eligible plugins with their current stage.
-      Wait for user selection.
-    </presentation>
-  </no_argument>
+**If plugin name provided:**
+1. Parse plugin name from arguments
+2. Verify preconditions (status check, contract verification)
+3. If preconditions pass: Invoke plugin-workflow skill via Skill tool
+4. If preconditions fail: Display blocking error and stop
 
-  <with_argument behavior="direct_invocation">
-    <sequence enforce_order="true">
-      <step order="1">Parse plugin name from $ARGUMENTS</step>
-      <step order="2">Execute precondition verification (see &lt;preconditions&gt; above)</step>
-      <step order="3">IF preconditions pass: Invoke plugin-workflow skill via Skill tool</step>
-      <step order="4">IF preconditions fail: Display blocking error and EXIT</step>
-    </sequence>
-
-    <skill_invocation tool="Skill" target="plugin-workflow">
-      Pass plugin name and starting stage to plugin-workflow skill.
-      Skill handles stages 2-6 implementation using subagent dispatcher pattern.
-    </skill_invocation>
-  </with_argument>
-</routing>
+**Skill invocation:**
+Invoke the plugin-workflow skill with the plugin name and starting stage. The skill handles stages 2-6 implementation using the subagent dispatcher pattern.
 
 ## The Implementation Stages
 
