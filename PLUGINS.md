@@ -189,7 +189,7 @@ Mix/Output:
 
 ### DriveVerb
 
-**Status:** 🚧 **Stage 4**
+**Status:** 🚧 **Stage 5**
 **Created:** 2025-11-11
 **Type:** Audio Effect (Reverb)
 **Complexity:** 5.0 / 5.0 (maximum - phased implementation)
@@ -226,6 +226,7 @@ Algorithmic reverb with warm tape saturation applied only to the wet signal, plu
 - **2025-11-12 (Stage 4.4):** PRE/POST routing (conditional branching for filter placement)
 - **2025-11-12 (Stage 5.1):** WebView layout + 5 interactive knobs (size, decay, dryWet, drive, filter)
 - **2025-11-12 (Stage 5.2):** Toggle switch + VU meter animation (filterPosition PRE/POST, ballistic motion)
+- **2025-11-12 (Stage 5.3):** Parameter value displays + polish (real-time readouts with units)
 
 **Known Issues:**
 - None
