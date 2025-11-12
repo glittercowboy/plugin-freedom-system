@@ -162,13 +162,7 @@ When user runs `/implement [PluginName?]`, invoke the plugin-workflow skill to b
 
 <decision_menus>
   Plugin-workflow skill presents decision menus at each stage completion.
-  Format follows system-wide checkpoint protocol (see .claude/CLAUDE.md).
-
-  Menu structure:
-  - Completion statement
-  - Context-appropriate options (primary, secondary, discovery, pause)
-  - User selection prompt
-
+  Decision menu format documented in plugin-workflow skill references.
   Command does NOT present menus - this is skill's responsibility after delegation.
 </decision_menus>
 

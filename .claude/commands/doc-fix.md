@@ -80,14 +80,19 @@ What's next?
 
 ## Why This Matters
 
-**Feedback loop:** Hit problem → Fix → Document → Next time finds solution instantly
+This creates a compounding knowledge system:
 
-**Impact:**
-- deep-research searches local docs first (Level 1 Fast Path)
-- No solving same problem repeatedly
-- Institutional knowledge compounds over time
+1. First time you solve "Plugin X crashes on parameter change" → Research (30 min)
+2. Document the solution → troubleshooting/runtime-issues/crashes-on-param.md (5 min)
+3. Next time similar issue occurs → Quick lookup (2 min)
+4. Knowledge compounds → System gets smarter
 
-**Integration:** Documentation feeds back into deep-research skill's Level 1 search.
+The feedback loop:
+```
+Build → Test → Find Issue → Research → Improve → Document → Validate → Deploy
+    ↑                                                                      ↓
+    └──────────────────────────────────────────────────────────────────────┘
+```
 
 ## Auto-Invoke
 

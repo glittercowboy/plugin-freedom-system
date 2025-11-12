@@ -117,62 +117,14 @@ When user runs `/improve [PluginName] [description?]`, route based on argument p
 ## Vagueness Detection
 
 <vagueness_detection>
-  <criteria>
-    Request IS vague if it lacks ANY of:
-    <required_element>Specific feature name (parameter, UI component, DSP element)</required_element>
-    <required_element>Specific action (add, fix, remove, modify, increase, decrease)</required_element>
-    <required_element>Acceptance criteria (range, value, behavior, constraint)</required_element>
-  </criteria>
+  Evaluate request specificity using criteria: feature name, action, acceptance criteria.
 
-  <evaluation_pattern>
-    Parse user description for presence of:
-    - Feature identifier: Look for component names, parameter names, specific UI elements
-    - Action verb: Look for add/fix/remove/modify/increase/decrease/change
-    - Measurable criteria: Look for numbers, ranges, specific behaviors, constraints
+  Detection logic and examples documented in plugin-improve skill references.
 
-    IF any element missing → classify as VAGUE
-    ELSE → classify as SPECIFIC
-  </evaluation_pattern>
-
-  <examples>
-    <vague_examples>
-      - "improve the filters" (lacks: which filter? what aspect? how much?)
-      - "better presets" (lacks: better how? which preset? specific values?)
-      - "UI feels cramped" (lacks: which component? by how much? specific dimension?)
-    </vague_examples>
-
-    <specific_examples>
-      - "add resonance parameter to filter, range 0-1" (has: feature=resonance, action=add, criteria=range 0-1)
-      - "fix bypass parameter - not muting audio" (has: feature=bypass, action=fix, criteria=mute audio)
-      - "increase window height to 500px" (has: feature=height, action=increase, criteria=500px)
-    </specific_examples>
-  </examples>
-
-  <decision_gate type="vagueness_handling">
-    <condition check="request_is_vague">
-      IF vague:
-        Present choice menu:
-        ```
-        Your request is vague. How should I proceed?
-
-        1. Brainstorm approaches first → creates improvement brief in plugins/[Name]/improvements/
-        2. Just implement something reasonable → Phase 0.5 investigation (I'll propose a specific approach)
-
-        Choose (1-2):
-        ```
-        WAIT for user response
-
-        IF user chooses 1 (brainstorm):
-          Invoke plugin-ideation skill in improvement mode
-        ELSE IF user chooses 2 (implement):
-          Proceed to plugin-improve skill with Phase 0.5 investigation
-    </condition>
-
-    <condition check="request_is_specific">
-      IF specific:
-        Proceed directly to plugin-improve skill with Phase 0.5 investigation
-    </condition>
-  </decision_gate>
+  <handling>
+    IF vague: Present choice menu (brainstorm OR implement with investigation)
+    IF specific: Proceed directly to plugin-improve skill with Phase 0.5 investigation
+  </handling>
 </vagueness_detection>
 
 ## Plugin-Improve Workflow
@@ -204,21 +156,5 @@ When user runs `/improve [PluginName] [description?]`, route based on argument p
 ## State Management
 
 <state_management>
-  <files_read>
-    - PLUGINS.md (precondition check: status must be ✅ or 📦)
-    - plugins/[PluginName]/.ideas/plan.md (workflow context)
-    - plugins/[PluginName]/CHANGELOG.md (version history)
-    - plugins/[PluginName]/improvements/*.md (existing improvement briefs)
-  </files_read>
-
-  <files_written>
-    - plugins/[PluginName]/CHANGELOG.md (version and changes)
-    - plugins/[PluginName]/backups/v[X.Y.Z]/* (pre-change backup)
-    - PLUGINS.md (Last Updated timestamp)
-  </files_written>
-
-  <git_operations>
-    - Commit: "feat([Plugin]): [description] (v[X.Y.Z])"
-    - Tag: "v[X.Y.Z]"
-  </git_operations>
+  State operations (file reads/writes, git operations) documented in plugin-improve skill references.
 </state_management>
