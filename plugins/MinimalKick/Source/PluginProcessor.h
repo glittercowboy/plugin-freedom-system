@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 
 class MinimalKickAudioProcessor : public juce::AudioProcessor
 {
@@ -30,6 +31,17 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
 private:
+    // DSP Components (declared BEFORE parameters for initialization order)
+    juce::dsp::Oscillator<float> oscillator;
+    juce::ADSR envelope;
+
+    // Voice state
+    bool isNoteOn { false };
+    int currentNote { 60 };  // C4 default
+    float currentFrequency { 0.0f };
+    double sampleRate { 44100.0 };
+
+    // APVTS comes AFTER DSP components
     juce::AudioProcessorValueTreeState parameters;
 
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();

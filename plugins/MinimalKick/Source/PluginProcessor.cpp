@@ -58,6 +58,8 @@ MinimalKickAudioProcessor::MinimalKickAudioProcessor()
                         .withOutput("Output", juce::AudioChannelSet::stereo(), true))
     , parameters(*this, nullptr, "Parameters", createParameterLayout())
 {
+    // Initialize oscillator with sine wave
+    oscillator.initialise([](float x) { return std::sin(x); }, 128);
 }
 
 MinimalKickAudioProcessor::~MinimalKickAudioProcessor()
@@ -66,36 +68,98 @@ MinimalKickAudioProcessor::~MinimalKickAudioProcessor()
 
 void MinimalKickAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
-    // Initialization will be added in Stage 4
-    juce::ignoreUnused(sampleRate, samplesPerBlock);
+    this->sampleRate = sampleRate;
+
+    // Prepare oscillator
+    juce::dsp::ProcessSpec spec;
+    spec.sampleRate = sampleRate;
+    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    spec.numChannels = static_cast<juce::uint32>(getTotalNumOutputChannels());
+
+    oscillator.prepare(spec);
+    oscillator.reset();
+
+    // Reset envelope
+    envelope.reset();
 }
 
 void MinimalKickAudioProcessor::releaseResources()
 {
-    // Cleanup will be added in Stage 4
+    // No buffers to release (oscillator and envelope are self-managing)
 }
 
 void MinimalKickAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
 {
     juce::ScopedNoDenormals noDenormals;
-    juce::ignoreUnused(midiMessages);
 
-    // Parameter access example (for Stage 4 DSP implementation):
-    // auto* sweepParam = parameters.getRawParameterValue("sweep");
-    // auto* timeParam = parameters.getRawParameterValue("time");
-    // auto* attackParam = parameters.getRawParameterValue("attack");
-    // auto* decayParam = parameters.getRawParameterValue("decay");
-    // auto* driveParam = parameters.getRawParameterValue("drive");
-    //
-    // float sweepValue = sweepParam->load();  // Atomic read (real-time safe)
-    // float timeValue = timeParam->load();
-    // float attackValue = attackParam->load();
-    // float decayValue = decayParam->load();
-    // float driveValue = driveParam->load();
-
-    // Pass-through for Stage 3 (DSP implementation happens in Stage 4)
-    // Instrument outputs silence until DSP implemented
+    // Clear buffer (instrument starts with silence)
     buffer.clear();
+
+    // Read parameters (atomic, real-time safe)
+    auto* attackParam = parameters.getRawParameterValue("attack");
+    auto* decayParam = parameters.getRawParameterValue("decay");
+
+    float attackMs = attackParam->load();
+    float decayMs = decayParam->load();
+
+    // Process MIDI messages
+    for (const auto metadata : midiMessages)
+    {
+        auto message = metadata.getMessage();
+
+        if (message.isNoteOn())
+        {
+            // Store note and convert to frequency
+            currentNote = message.getNoteNumber();
+            currentFrequency = juce::MidiMessage::getMidiNoteInHertz(currentNote);
+
+            // Set oscillator frequency
+            oscillator.setFrequency(currentFrequency);
+
+            // Reset oscillator phase for consistent attack
+            oscillator.reset();
+
+            // Configure and trigger envelope
+            juce::ADSR::Parameters envParams;
+            envParams.attack = attackMs / 1000.0f;     // Convert ms to seconds
+            envParams.decay = decayMs / 1000.0f;       // Convert ms to seconds
+            envParams.sustain = 0.0f;                   // Fixed for kick drums
+            envParams.release = 0.0f;                   // Not needed (sustain=0)
+
+            envelope.setParameters(envParams);
+            envelope.noteOn();
+
+            isNoteOn = true;
+        }
+        else if (message.isNoteOff())
+        {
+            // Note-off can be ignored (sustain=0, envelope decays naturally)
+            isNoteOn = false;
+        }
+    }
+
+    // Generate audio if envelope is active
+    const int numSamples = buffer.getNumSamples();
+
+    if (envelope.isActive())
+    {
+        // Process mono (oscillator generates single channel)
+        for (int sample = 0; sample < numSamples; ++sample)
+        {
+            // Generate sine wave sample
+            float oscillatorSample = oscillator.processSample(0.0f);
+
+            // Apply amplitude envelope
+            float envelopeValue = envelope.getNextSample();
+            float outputSample = oscillatorSample * envelopeValue;
+
+            // Write to both channels (mono to stereo)
+            for (int channel = 0; channel < buffer.getNumChannels(); ++channel)
+            {
+                buffer.setSample(channel, sample, outputSample);
+            }
+        }
+    }
 }
 
 juce::AudioProcessorEditor* MinimalKickAudioProcessor::createEditor()
