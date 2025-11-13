@@ -110,6 +110,38 @@ private:
         }
     };
 
+    // Clap Voice structure (multi-trigger envelope + filtered noise)
+    enum class ClapEnvelopeState { Spike1, Spike2, Spike3, Decay, Idle };
+
+    struct ClapVoice
+    {
+        juce::dsp::StateVariableTPTFilter<float> bandpassFilter;
+        ClapEnvelopeState envelopeState = ClapEnvelopeState::Idle;
+        int envelopeSample = 0;
+        float velocity = 0.0f;
+        bool isPlaying = false;
+
+        // Sample-rate independent timing (calculated in prepareToPlay)
+        int spike2StartSample = 0;
+        int spike3StartSample = 0;
+        int decayStartSample = 0;
+
+        void trigger(float velocityGain)
+        {
+            isPlaying = true;
+            envelopeState = ClapEnvelopeState::Spike1;
+            envelopeSample = 0;
+            velocity = velocityGain;
+        }
+
+        void stop()
+        {
+            isPlaying = false;
+            envelopeState = ClapEnvelopeState::Idle;
+            envelopeSample = 0;
+        }
+    };
+
     // DSP Components (BEFORE APVTS for initialization order)
     juce::dsp::ProcessSpec spec;
     TomVoice lowTom;
@@ -117,6 +149,7 @@ private:
     KickVoice kick;
     HiHatVoice closedHat;
     HiHatVoice openHat;
+    ClapVoice clap;
 
     double currentSampleRate = 44100.0;
 

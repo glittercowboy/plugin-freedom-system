@@ -283,6 +283,21 @@ void Drum808AudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
     openHat.filter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
     openHat.filter.setResonance(4.0f); // High Q for metallic ring
     openHat.filter.reset();
+
+    // Configure and prepare Clap (filtered noise with multi-trigger envelope)
+    juce::dsp::ProcessSpec monoSpec;
+    monoSpec.sampleRate = sampleRate;
+    monoSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    monoSpec.numChannels = 1; // Mono voice
+
+    clap.bandpassFilter.prepare(monoSpec);
+    clap.bandpassFilter.setType(juce::dsp::StateVariableTPTFilterType::bandpass);
+    clap.bandpassFilter.reset();
+
+    // Calculate spike transition samples (sample-rate independent)
+    clap.spike2StartSample = static_cast<int>(sampleRate * 0.010);  // 10ms
+    clap.spike3StartSample = static_cast<int>(sampleRate * 0.020);  // 20ms
+    clap.decayStartSample = static_cast<int>(sampleRate * 0.030);   // 30ms
 }
 
 void Drum808AudioProcessor::releaseResources()
@@ -333,6 +348,17 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     float midTomDecay = midTomDecayParam->load() / 1000.0f;
     float midTomTuning = midTomTuningParam->load();
 
+    // Clap parameters
+    auto* clapLevelParam = parameters.getRawParameterValue("clap_level");
+    auto* clapToneParam = parameters.getRawParameterValue("clap_tone");
+    auto* clapSnapParam = parameters.getRawParameterValue("clap_snap");
+    auto* clapTuningParam = parameters.getRawParameterValue("clap_tuning");
+
+    float clapLevel = clapLevelParam->load() / 100.0f;
+    float clapTone = clapToneParam->load() / 100.0f;
+    float clapSnap = clapSnapParam->load() / 100.0f;
+    float clapTuning = clapTuningParam->load();
+
     // Hi-Hat parameters
     auto* closedHatLevelParam = parameters.getRawParameterValue("closedhat_level");
     auto* closedHatToneParam = parameters.getRawParameterValue("closedhat_tone");
@@ -357,12 +383,14 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // Calculate tuned base frequencies
     const float lowTomBaseFreq = 150.0f * std::pow(2.0f, lowTomTuning / 12.0f);
     const float midTomBaseFreq = 220.0f * std::pow(2.0f, midTomTuning / 12.0f);
+    const float clapCenterFreq = 1000.0f * std::pow(2.0f, clapTuning / 12.0f);
     const float closedHatBaseFreq = 3500.0f * std::pow(2.0f, closedHatTuning / 12.0f);
     const float openHatBaseFreq = 3500.0f * std::pow(2.0f, openHatTuning / 12.0f);
 
     // Map tone parameters
     const float lowTomQ = 0.5f + (lowTomTone * 4.5f);
     const float midTomQ = 0.5f + (midTomTone * 4.5f);
+    const float clapQ = 2.0f + (clapTone * 3.0f); // Q range 2.0-5.0
     const float closedHatCenterFreq = 6000.0f + (closedHatTone * 6000.0f); // 6-12 kHz
     const float openHatCenterFreq = 6000.0f + (openHatTone * 6000.0f);
 
@@ -380,6 +408,10 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             if (note == 36) // C1 → Kick
             {
                 kick.trigger(velocity);
+            }
+            else if (note == 38) // D1 → Clap
+            {
+                clap.trigger(velocity);
             }
             else if (note == 41) // F1 → Low Tom
             {
@@ -404,12 +436,17 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         }
     }
 
+    // Configure clap filter (outside loop for efficiency)
+    clap.bandpassFilter.setCutoffFrequency(clapCenterFreq);
+    clap.bandpassFilter.setResonance(clapQ);
+
     // Synthesize voices (per-sample processing)
     for (int sample = 0; sample < numSamples; ++sample)
     {
         float kickSample = 0.0f;
         float lowTomSample = 0.0f;
         float midTomSample = 0.0f;
+        float clapSample = 0.0f;
         float closedHatSample = 0.0f;
         float openHatSample = 0.0f;
 
@@ -484,6 +521,68 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             midTom.envelopeTime += 1.0f / static_cast<float>(currentSampleRate);
         }
 
+        // Clap synthesis (multi-trigger envelope + filtered noise)
+        if (clap.isPlaying)
+        {
+            // Generate white noise
+            float noise = juce::Random::getSystemRandom().nextFloat() * 2.0f - 1.0f;
+
+            // Apply bandpass filter
+            float filteredNoise = clap.bandpassFilter.processSample(0, noise);
+
+            // Calculate envelope based on state machine
+            float envelope = 0.0f;
+            int t = clap.envelopeSample;
+
+            if (clap.envelopeState == ClapEnvelopeState::Spike1)
+            {
+                float timeInSpike = t / static_cast<float>(currentSampleRate);
+                envelope = clapSnap * std::exp(-timeInSpike / 0.003f);
+
+                if (t >= clap.spike2StartSample)
+                {
+                    clap.envelopeState = ClapEnvelopeState::Spike2;
+                }
+            }
+            else if (clap.envelopeState == ClapEnvelopeState::Spike2)
+            {
+                float timeInSpike = (t - clap.spike2StartSample) / static_cast<float>(currentSampleRate);
+                envelope = clapSnap * 0.6f * std::exp(-timeInSpike / 0.003f);
+
+                if (t >= clap.spike3StartSample)
+                {
+                    clap.envelopeState = ClapEnvelopeState::Spike3;
+                }
+            }
+            else if (clap.envelopeState == ClapEnvelopeState::Spike3)
+            {
+                float timeInSpike = (t - clap.spike3StartSample) / static_cast<float>(currentSampleRate);
+                envelope = clapSnap * 0.3f * std::exp(-timeInSpike / 0.003f);
+
+                if (t >= clap.decayStartSample)
+                {
+                    clap.envelopeState = ClapEnvelopeState::Decay;
+                }
+            }
+            else if (clap.envelopeState == ClapEnvelopeState::Decay)
+            {
+                float timeInDecay = (t - clap.decayStartSample) / static_cast<float>(currentSampleRate);
+                envelope = std::exp(-timeInDecay / 1.934f);
+
+                // Stop voice after decay tail (envelope < threshold)
+                if (envelope < 1e-4f)
+                {
+                    clap.stop();
+                    envelope = 0.0f;
+                }
+            }
+
+            // Apply envelope, level, and velocity
+            clapSample = filteredNoise * envelope * clapLevel * clap.velocity;
+
+            clap.envelopeSample++;
+        }
+
         // Closed Hi-Hat synthesis (6 oscillators + bandpass)
         if (closedHat.isPlaying)
         {
@@ -546,7 +645,7 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         // Main mix (bus 0, stereo)
         if (buffer.getNumChannels() >= 2)
         {
-            float mainMix = kickSample + lowTomSample + midTomSample + closedHatSample + openHatSample;
+            float mainMix = kickSample + lowTomSample + midTomSample + clapSample + closedHatSample + openHatSample;
             buffer.addSample(0, sample, mainMix); // Left
             buffer.addSample(1, sample, mainMix); // Right
         }
@@ -571,6 +670,13 @@ void Drum808AudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
         {
             buffer.addSample(6, sample, midTomSample); // Mid Tom Left
             buffer.addSample(7, sample, midTomSample); // Mid Tom Right
+        }
+
+        // Clap output (bus 4, channels 8-9)
+        if (buffer.getNumChannels() >= 10)
+        {
+            buffer.addSample(8, sample, clapSample); // Clap Left
+            buffer.addSample(9, sample, clapSample); // Clap Right
         }
 
         // Closed Hat output (bus 5, channels 10-11)
