@@ -33,6 +33,7 @@
 | OrganicHats | 📦 Installed | 1.0.0 | 2025-11-12 |
 | DrumRoulette | 📦 Installed | 1.0.0 | 2025-11-12 |
 | Scatter | 💡 Ideated | - | 2025-11-12 |
+| MinimalKick | 💡 Ideated | - | 2025-11-12 |
 
 ### GainKnob
 
@@ -532,6 +533,30 @@ Granular reversed delay with beautiful stuttering grains, randomized pitch (quan
 - Granular: GrainScanner, Portal, Granite, Iris
 - Ambient: Cosmos, Shimmer, CloudSeed
 - Reverse delays: Backmask, H-Delay reverse mode, EchoBoy
+
+**Lifecycle Timeline:**
+- **2025-11-12:** Creative brief completed
+
+**Known Issues:**
+- None
+
+**Last Updated:** 2025-11-12
+
+### MinimalKick
+
+**Status:** 💡 Ideated
+**Type:** Synth
+**Created:** 2025-11-12
+
+**Description:**
+Minimal house kick drum synthesizer with sine wave + pitch envelope architecture for deep, subby kicks that sit perfectly in minimal and tech house tracks.
+
+**Parameters (5 total):**
+- Pitch: 30-100 Hz, default 50 Hz (starting frequency)
+- Decay: 50-2000 ms, default 400 ms (pitch envelope decay time)
+- Attack: 0-50 ms, default 5 ms (amplitude attack)
+- Release: 50-1000 ms, default 300 ms (amplitude release)
+- Drive: 0-100%, default 20% (saturation/harmonics)
 
 **Lifecycle Timeline:**
 - **2025-11-12:** Creative brief completed

@@ -39,48 +39,73 @@ If all preconditions pass → proceed to Stage 0 or Stage 1 based on resume logi
 
 **Goal:** Create DSP architecture specification (architecture.md)
 **Duration:** 5-30 minutes (complexity-dependent)
+**Implementation:** Delegated to research-agent subagent via Task tool
 
-**Process:** Execute 6 sequential research steps with strict enforcement:
+**Dispatch pattern:**
 
-1. Read creative brief
-2. Identify technical approach (plugin type, I/O config, processing domain)
-3. Research JUCE DSP modules (≥2 classes required)
-4. Research professional plugins (≥3 examples required)
-5. Research parameter ranges (industry standards)
-6. Design sync check (if mockup exists)
+1. Read contracts to pass to subagent:
+   - plugins/[Name]/.ideas/creative-brief.md (REQUIRED)
+   - plugins/[Name]/.ideas/mockups/*.yaml (if exists, for design sync)
 
-**For detailed step-by-step enforcement:** See [references/stage-0-research.md](references/stage-0-research.md)
+2. Construct prompt with contracts prepended:
+   ```
+   You are research-agent. Execute Stage 0 research for [PluginName].
 
-**Workflow Checklist** - Copy and track progress:
+   Creative brief:
+   [content of creative-brief.md]
 
-```
-Stage 0 Progress:
-- [ ] Step 1: Read creative brief
-- [ ] Step 2: Identify technical approach
-- [ ] Step 3: Research JUCE DSP modules (≥2 classes)
-- [ ] Step 4: Research professional plugins (≥3 examples)
-- [ ] Step 5: Research parameter ranges
-- [ ] Step 6: Design sync check (if mockup exists)
-- [ ] Create architecture.md from template
-- [ ] Update .continue-here.md
-- [ ] Update PLUGINS.md status
-- [ ] Git commit changes
-- [ ] Present decision menu
-```
+   [If mockup exists:]
+   UI mockup:
+   [content of mockup file]
 
-**Skill Routing:**
+   Execute the full Stage 0 research protocol:
+   1. Complexity detection (Tier 1-6)
+   2. Feature identification (meta-research)
+   3. Per-feature deep research (algorithmic understanding, professional research, JUCE API mapping, validation)
+   4. Integration analysis
+   5. Create architecture.md from template
+   6. Update state files and commit
 
-- **If JUCE class not found:** Invoke deep-research skill: `Skill(skill='deep-research')`
-- **If mockup exists:** Invoke design-sync skill: `Skill(skill='design-sync')`
-- **If dependencies missing:** Invoke system-setup skill: `Skill(skill='system-setup')`
+   Return JSON report with architecture.md location and status.
+   ```
+
+3. Invoke subagent:
+   ```
+   Task(subagent_type="research-agent", description="[prompt with contracts]", model="sonnet")
+   ```
+
+4. AFTER subagent returns, execute checkpoint protocol:
+   - Read subagent's JSON report
+   - Verify architecture.md created and contains all required sections
+   - Present decision menu (see [references/state-updates.md](references/state-updates.md))
+   - WAIT for user response
+
+**Subagent executes:** Full research protocol from references/stage-0-research.md
+- Complexity detection (Tier 1-6) with extended thinking
+- Per-feature deep research (algorithmic understanding, professional research, JUCE API mapping, validation)
+- Integration analysis (dependencies, interactions, processing order, threads)
+- architecture.md generation from assets/architecture-template.md
+- State updates (.continue-here.md, PLUGINS.md, git commit)
 
 **Output:** `plugins/[Name]/.ideas/architecture.md` (see assets/architecture-template.md)
 
-**State management:** Update .continue-here.md, PLUGINS.md status, git commit (see [references/git-operations.md](references/git-operations.md))
+**Decision menu after subagent completes:**
 
-**Decision menu:** Present menu from assets/decision-menu-stage-0.md, WAIT for user response
+```
+✓ Stage 0 complete: DSP architecture documented
 
-**Anti-pattern:** ❌ NEVER skip research steps 2-5 or jump directly to architecture.md creation
+What's next?
+1. Continue to Stage 1 - Planning (recommended)
+2. Review architecture.md findings
+3. Improve creative brief based on research
+4. Run deeper JUCE investigation (deep-research skill) ← Discover troubleshooting
+5. Pause here
+6. Other
+
+Choose (1-6): _
+```
+
+**Note:** research-agent runs in fresh context (5-30 min research doesn't pollute orchestrator)
 
 **VALIDATION GATE: Before proceeding to Stage 1:**
 
