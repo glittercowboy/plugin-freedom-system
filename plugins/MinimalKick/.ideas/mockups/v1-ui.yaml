@@ -1,96 +1,89 @@
 window:
-  width: 500
+  width: 590
   height: 300
   resizable: false
-  title: "MinimalKick"
 
-layout:
-  type: horizontal
-  arrangement: single_row
-  spacing: 15
+aesthetic:
+  source: vintage-hardware-001
+  adapted_for: MinimalKick (5 parameters)
 
 controls:
   - id: pitch
-    type: rotary_knob
-    position: { x: 50, y: 120 }
-    size: 60
+    type: slider
+    style: rotary_knob
+    position: { x: 60, y: 190 }
+    size: { diameter: 90 }
     range: [30.0, 100.0]
     default: 50.0
     unit: "Hz"
     label: "PITCH"
-    style: large_circular
 
   - id: decay
-    type: rotary_knob
-    position: { x: 140, y: 120 }
-    size: 60
+    type: slider
+    style: rotary_knob
+    position: { x: 160, y: 190 }
+    size: { diameter: 90 }
     range: [50.0, 2000.0]
     default: 400.0
     unit: "ms"
     label: "DECAY"
-    style: large_circular
 
   - id: attack
-    type: rotary_knob
-    position: { x: 230, y: 120 }
-    size: 60
+    type: slider
+    style: rotary_knob
+    position: { x: 260, y: 190 }
+    size: { diameter: 90 }
     range: [0.0, 50.0]
     default: 5.0
     unit: "ms"
     label: "ATTACK"
-    style: large_circular
 
   - id: release
-    type: rotary_knob
-    position: { x: 320, y: 120 }
-    size: 60
+    type: slider
+    style: rotary_knob
+    position: { x: 360, y: 190 }
+    size: { diameter: 90 }
     range: [50.0, 1000.0]
     default: 300.0
     unit: "ms"
     label: "RELEASE"
-    style: large_circular
 
   - id: drive
-    type: rotary_knob
-    position: { x: 410, y: 120 }
-    size: 60
+    type: slider
+    style: rotary_knob
+    position: { x: 460, y: 190 }
+    size: { diameter: 90 }
     range: [0.0, 100.0]
     default: 20.0
     unit: "%"
     label: "DRIVE"
-    style: large_circular
-
-visual_elements:
-  - type: led_indicator
-    position: { x: 240, y: 40 }
-    size: 12
-    label: "TRIGGER"
-    color: "#ffffff"
 
 styling:
   colors:
-    background: "#1a1a1a"
-    foreground: "#ffffff"
-    knob_track: "#333333"
-    knob_fill: "#ffffff"
-    led_on: "#ffffff"
-    led_off: "#3a3a3a"
-    text: "#cccccc"
+    background_dark: "#2a1a0a"
+    background_mid: "#4a3a2a"
+    background_very_dark: "#1a0a00"
+    background_surface: "#3a2a1a"
+    accent_brass_light: "#d4a574"
+    accent_brass: "#c49564"
+    accent_brass_dark: "#a08050"
+    text_primary: "#c49564"
+    control_highlight: "#3a2a1a"
+    control_mid: "#2f2015"
+    control_dark: "#1a0a00"
 
-  fonts:
-    primary: "Arial, sans-serif"
-    label_size: 11
-    value_size: 13
-    weight: normal
+  typography:
+    primary_font: "Helvetica Neue, Helvetica, Arial, sans-serif"
+    title_size: "28px"
+    title_weight: "300"
+    title_spacing: "0.4em"
+    label_size: "10px"
+    label_weight: "500"
+    label_spacing: "0.3em"
+    text_transform: "uppercase"
 
-  theme:
-    aesthetic: minimal_modern
-    contrast: high
-    decorations: none
-
-metadata:
-  version: 1
-  plugin_name: "MinimalKick"
-  parameter_count: 5
-  complexity: low
-  design_philosophy: "Pure minimal - five essential parameters with immediate visual feedback"
+  effects:
+    scan_lines: true
+    vignette: true
+    knob_glow: true
+    drop_shadow: "0 8px 16px rgba(0,0,0,0.8), 0 4px 8px rgba(0,0,0,0.6)"

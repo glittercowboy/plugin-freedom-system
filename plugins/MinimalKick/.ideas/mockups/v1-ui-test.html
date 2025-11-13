@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MinimalKick UI Test</title>
+    <title>MinimalKick - UI Mockup v1 (Test)</title>
     <style>
         * {
             margin: 0;
@@ -19,183 +19,212 @@
         }
 
         body {
-            font-family: Arial, sans-serif;
-            background: #1a1a1a;
-            color: #cccccc;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 500px;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            background: radial-gradient(ellipse at center, #4a3a2a 0%, #2a1a0a 100%);
+            position: relative;
+            width: 590px;
             height: 300px;
         }
 
-        .led-container {
-            position: absolute;
-            top: 40px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .led {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #3a3a3a;
-            transition: background 0.1s ease;
-        }
-
-        .led.active {
-            background: #ffffff;
-            box-shadow: 0 0 10px #ffffff;
-        }
-
-        .led-label {
-            font-size: 9px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #666666;
-        }
-
-        .controls {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-            justify-content: center;
-            margin-top: 20px;
-        }
-
-        .knob-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .knob {
-            width: 60px;
-            height: 60px;
-            position: relative;
-            cursor: pointer;
-        }
-
-        .knob-track {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: #333333;
-            position: relative;
-        }
-
-        .knob-fill {
+        /* Scan lines effect */
+        body::before {
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(#ffffff 0deg, transparent 0deg);
-            transition: background 0.05s linear;
+            background: repeating-linear-gradient(
+                to bottom,
+                transparent 0px,
+                transparent 2px,
+                rgba(0, 0, 0, 0.03) 2px,
+                rgba(0, 0, 0, 0.03) 4px
+            );
+            pointer-events: none;
+            z-index: 10;
         }
 
-        .knob-pointer {
+        /* Vignette effect */
+        body::after {
+            content: '';
             position: absolute;
-            top: 5px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(ellipse at center, transparent 0%, rgba(0, 0, 0, 0.3) 100%);
+            pointer-events: none;
+            z-index: 11;
+        }
+
+        #plugin-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
+        }
+
+        #plugin-title {
+            color: #c49564;
+            font-size: 28px;
+            font-weight: 300;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            margin-bottom: 40px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #controls-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .control-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .knob {
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #3a2a1a, #2f2015 50%, #1a0a00);
+            box-shadow:
+                0 8px 16px rgba(0, 0, 0, 0.8),
+                0 4px 8px rgba(0, 0, 0, 0.6),
+                inset 0 1px 2px rgba(255, 255, 255, 0.1),
+                0 0 20px rgba(212, 165, 116, 0.2);
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.05s ease-out;
+        }
+
+        .knob:hover {
+            transform: scale(1.005);
+        }
+
+        .knob:active {
+            transform: scale(0.995);
+        }
+
+        .knob::before {
+            content: '';
+            position: absolute;
+            top: 8%;
             left: 50%;
-            width: 2px;
-            height: 15px;
-            background: #ffffff;
-            transform-origin: center 25px;
-            transform: translateX(-50%);
+            width: 4px;
+            height: 35px;
+            background: linear-gradient(to bottom, #d4a574, #c49564);
+            transform-origin: center 370%;
+            border-radius: 2px;
+            box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
+            margin-left: -2px;
+        }
+
+        .knob[data-value] {
+            /* Rotation set via JavaScript */
         }
 
         .knob-label {
-            font-size: 11px;
+            color: #c49564;
+            font-size: 10px;
+            font-weight: 500;
+            letter-spacing: 0.3em;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #666666;
         }
 
-        .knob-value {
-            font-size: 13px;
-            color: #ffffff;
-            font-weight: normal;
+        /* Debug console */
+        #debug-console {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 11px;
+            padding: 8px;
+            border-radius: 4px;
+            max-width: 300px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        #debug-console.active {
+            display: block;
         }
     </style>
 </head>
 <body>
-    <div class="led-container">
-        <div class="led" id="led"></div>
-        <div class="led-label">TRIGGER</div>
-    </div>
+    <div id="plugin-container">
+        <div id="plugin-title">MinimalKick</div>
 
-    <div class="controls">
-        <div class="knob-container">
-            <div class="knob" id="pitch-knob" data-param="pitch" data-min="30" data-max="100" data-default="50" data-unit="Hz">
-                <div class="knob-track">
-                    <div class="knob-fill"></div>
-                    <div class="knob-pointer"></div>
-                </div>
+        <div id="controls-container">
+            <div class="control-wrapper">
+                <div class="knob" id="knob-pitch" data-param="pitch" data-min="30" data-max="100" data-default="50"></div>
+                <div class="knob-label">PITCH</div>
             </div>
-            <div class="knob-label">PITCH</div>
-            <div class="knob-value" id="pitch-value">50 Hz</div>
-        </div>
 
-        <div class="knob-container">
-            <div class="knob" id="decay-knob" data-param="decay" data-min="50" data-max="2000" data-default="400" data-unit="ms">
-                <div class="knob-track">
-                    <div class="knob-fill"></div>
-                    <div class="knob-pointer"></div>
-                </div>
+            <div class="control-wrapper">
+                <div class="knob" id="knob-decay" data-param="decay" data-min="50" data-max="2000" data-default="400"></div>
+                <div class="knob-label">DECAY</div>
             </div>
-            <div class="knob-label">DECAY</div>
-            <div class="knob-value" id="decay-value">400 ms</div>
-        </div>
 
-        <div class="knob-container">
-            <div class="knob" id="attack-knob" data-param="attack" data-min="0" data-max="50" data-default="5" data-unit="ms">
-                <div class="knob-track">
-                    <div class="knob-fill"></div>
-                    <div class="knob-pointer"></div>
-                </div>
+            <div class="control-wrapper">
+                <div class="knob" id="knob-attack" data-param="attack" data-min="0" data-max="50" data-default="5"></div>
+                <div class="knob-label">ATTACK</div>
             </div>
-            <div class="knob-label">ATTACK</div>
-            <div class="knob-value" id="attack-value">5 ms</div>
-        </div>
 
-        <div class="knob-container">
-            <div class="knob" id="release-knob" data-param="release" data-min="50" data-max="1000" data-default="300" data-unit="ms">
-                <div class="knob-track">
-                    <div class="knob-fill"></div>
-                    <div class="knob-pointer"></div>
-                </div>
+            <div class="control-wrapper">
+                <div class="knob" id="knob-release" data-param="release" data-min="50" data-max="1000" data-default="300"></div>
+                <div class="knob-label">RELEASE</div>
             </div>
-            <div class="knob-label">RELEASE</div>
-            <div class="knob-value" id="release-value">300 ms</div>
-        </div>
 
-        <div class="knob-container">
-            <div class="knob" id="drive-knob" data-param="drive" data-min="0" data-max="100" data-default="20" data-unit="%">
-                <div class="knob-track">
-                    <div class="knob-fill"></div>
-                    <div class="knob-pointer"></div>
-                </div>
+            <div class="control-wrapper">
+                <div class="knob" id="knob-drive" data-param="drive" data-min="0" data-max="100" data-default="20"></div>
+                <div class="knob-label">DRIVE</div>
             </div>
-            <div class="knob-label">DRIVE</div>
-            <div class="knob-value" id="drive-value">20%</div>
         </div>
     </div>
+
+    <div id="debug-console"></div>
 
     <script>
         // Disable context menu
         document.addEventListener('contextmenu', (e) => e.preventDefault());
 
+        // Debug console
+        const debugConsole = document.getElementById('debug-console');
+        let debugEnabled = false;
+
+        function log(message) {
+            console.log(message);
+            if (debugEnabled) {
+                debugConsole.textContent += message + '\n';
+                debugConsole.scrollTop = debugConsole.scrollHeight;
+            }
+        }
+
+        // Toggle debug console with 'd' key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'd') {
+                debugEnabled = !debugEnabled;
+                debugConsole.classList.toggle('active', debugEnabled);
+                log('Debug console ' + (debugEnabled ? 'enabled' : 'disabled'));
+            }
+        });
+
         // Mock parameter state
-        const paramState = {
+        const parameterState = {
             pitch: 50,
             decay: 400,
             attack: 5,
@@ -209,69 +238,119 @@
             const min = parseFloat(knob.dataset.min);
             const max = parseFloat(knob.dataset.max);
             const defaultVal = parseFloat(knob.dataset.default);
-            const unit = knob.dataset.unit;
+
+            parameterState[param] = defaultVal;
+            updateKnobRotation(knob, defaultVal, min, max);
 
             let isDragging = false;
             let startY = 0;
-            let startValue = defaultVal;
-
-            // Set initial value
-            paramState[param] = defaultVal;
-            updateKnobVisual(knob, defaultVal, min, max, unit);
+            let startValue = 0;
 
             knob.addEventListener('mousedown', (e) => {
                 isDragging = true;
                 startY = e.clientY;
-                startValue = paramState[param];
+                startValue = parameterState[param];
                 e.preventDefault();
             });
 
             document.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
 
-                const deltaY = startY - e.clientY;
+                const delta = (startY - e.clientY) * 0.5; // Sensitivity
                 const range = max - min;
-                const sensitivity = range / 200;
-                let newValue = startValue + (deltaY * sensitivity);
-
+                let newValue = startValue + (delta / 100) * range;
                 newValue = Math.max(min, Math.min(max, newValue));
-                paramState[param] = newValue;
 
-                updateKnobVisual(knob, newValue, min, max, unit);
-                console.log(`Parameter: ${param}, Value: ${newValue.toFixed(1)} ${unit}`);
+                parameterState[param] = newValue;
+                updateKnobRotation(knob, newValue, min, max);
+                log(`${param}: ${newValue.toFixed(2)}`);
             });
 
             document.addEventListener('mouseup', () => {
-                isDragging = false;
+                if (isDragging) {
+                    isDragging = false;
+                    log(`${param} released at ${parameterState[param].toFixed(2)}`);
+                }
+            });
+
+            // Double-click to reset to default
+            knob.addEventListener('dblclick', () => {
+                parameterState[param] = defaultVal;
+                updateKnobRotation(knob, defaultVal, min, max);
+                log(`${param} reset to default: ${defaultVal}`);
             });
         });
 
-        function updateKnobVisual(knob, value, min, max, unit) {
-            const param = knob.dataset.param;
+        function updateKnobRotation(knob, value, min, max) {
             const normalized = (value - min) / (max - min);
-            const angle = normalized * 270 - 135;
-            const fillDeg = normalized * 270;
+            const degrees = -135 + (normalized * 270); // -135° to +135° range
+            knob.style.setProperty('--rotation', `${degrees}deg`);
+            const indicator = knob.querySelector('::before') || knob;
+            knob.style.transform = `rotate(${degrees}deg)`;
 
-            const fill = knob.querySelector('.knob-fill');
-            const pointer = knob.querySelector('.knob-pointer');
-            const valueDisplay = document.getElementById(`${param}-value`);
+            // Reset transform for knob itself, apply only to indicator
+            knob.style.transform = 'none';
+            const rotationStyle = `rotate(${degrees}deg)`;
+            knob.style.setProperty('--indicator-rotation', rotationStyle);
 
-            fill.style.background = `conic-gradient(#ffffff ${fillDeg}deg, transparent ${fillDeg}deg)`;
-            pointer.style.transform = `translateX(-50%) rotate(${angle}deg)`;
-
-            let displayValue = value.toFixed(value < 10 ? 1 : 0);
-            valueDisplay.textContent = `${displayValue} ${unit}`;
+            // Apply rotation to ::before pseudo-element via CSS variable
+            knob.setAttribute('data-rotation', degrees);
         }
 
-        // LED trigger simulation (click anywhere to trigger)
-        document.addEventListener('click', () => {
-            const led = document.getElementById('led');
-            led.classList.add('active');
-            setTimeout(() => led.classList.remove('active'), 200);
+        // Update CSS to use rotation from data attribute
+        const style = document.createElement('style');
+        style.textContent = `
+            .knob::before {
+                transform: rotate(attr(data-rotation deg, -135deg));
+                transform-origin: center 370%;
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Better approach: use inline transform on a child element
+        document.querySelectorAll('.knob').forEach(knob => {
+            const indicator = document.createElement('div');
+            indicator.className = 'knob-indicator';
+            indicator.style.cssText = `
+                position: absolute;
+                top: 8%;
+                left: 50%;
+                width: 4px;
+                height: 35px;
+                background: linear-gradient(to bottom, #d4a574, #c49564);
+                transform-origin: center 370%;
+                border-radius: 2px;
+                box-shadow: 0 0 8px rgba(212, 165, 116, 0.4);
+                margin-left: -2px;
+                pointer-events: none;
+            `;
+            knob.appendChild(indicator);
+
+            // Override updateKnobRotation for this knob
+            const originalUpdate = updateKnobRotation;
+            knob._updateRotation = (value, min, max) => {
+                const normalized = (value - min) / (max - min);
+                const degrees = -135 + (normalized * 270);
+                indicator.style.transform = `rotate(${degrees}deg)`;
+            };
         });
 
-        console.log('MinimalKick UI Test - Click anywhere to trigger LED');
-        console.log('Drag knobs vertically to adjust parameters');
+        // Re-initialize with indicator rotation
+        document.querySelectorAll('.knob').forEach(knob => {
+            const param = knob.dataset.param;
+            const min = parseFloat(knob.dataset.min);
+            const max = parseFloat(knob.dataset.max);
+            const defaultVal = parseFloat(knob.dataset.default);
+
+            if (knob._updateRotation) {
+                knob._updateRotation(defaultVal, min, max);
+            }
+        });
+
+        log('MinimalKick UI mockup v1 loaded');
+        log('Press "d" to toggle debug console');
+        log('Drag knobs to adjust parameters');
+        log('Double-click knobs to reset to default');
     </script>
 </body>
 </html>
