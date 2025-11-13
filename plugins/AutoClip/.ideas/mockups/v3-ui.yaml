@@ -1,0 +1,90 @@
+window:
+  width: 400
+  height: 400
+  resizable: false
+
+controls:
+  - id: clipThreshold
+    type: rotary_knob
+    position: { x: 130, y: 110 }
+    size: { width: 140, height: 140 }
+    range: [0.0, 100.0]
+    default: 0.0
+    label: "THRESHOLD"
+    label_position: above
+    value_display: true
+    value_display_position: below
+    value_format: "{value}%"
+
+  - id: soloClipped
+    type: toggle
+    position: { x: 168, y: 310 }
+    size: { width: 64, height: 32 }
+    default: false
+    label: "CLIP SOLO"
+    label_position: below
+
+styling:
+  theme: vintage_bakelite
+  colors:
+    background_primary: "#2a1808"
+    background_secondary: "#1a0800"
+    background_outer: "#000"
+    knob_body_gradient:
+      - "#6a4a2a"
+      - "#5a3a1a"
+      - "#3a2010"
+      - "#2a1008"
+    indicator_color: "#d4b494"
+    indicator_secondary: "#a88870"
+    toggle_thumb: "#987860"
+    toggle_track_inactive: "#3a2010"
+    toggle_track_active: "#5a4030"
+    border_color: "#2a1408"
+    border_outer: "#4a3020"
+    border_hover: "#c49564"
+    stitch_color: "rgba(212, 180, 148, 0.15)"
+    text_primary: "#986a4a"
+    text_value: "#a87a5a"
+    title_color: "#a88870"
+
+  texture:
+    noise_enabled: true
+    noise_base_frequency: 2.3
+    noise_octaves: 3
+    noise_opacity: 0.17
+
+  typography:
+    font_family: "system-ui, sans-serif"
+    text_transform: uppercase
+    letter_spacing: "0.15em"
+    label_size: "13px"
+    value_size: "16px"
+    title_size: "16px"
+    title_weight: "700"
+
+  effects:
+    border_radius: 4
+    shadow_layers: 3
+    shadow_outset: "0 8px 16px rgba(0, 0, 0, 0.6)"
+    shadow_inset_top: "inset 0 3px 3px rgba(90, 58, 26, 0.3)"
+    shadow_inset_bottom: "inset 0 -3px 3px rgba(0, 0, 0, 0.7)"
+    hover_transition: "border-color 0.15s ease"
+    stitch_inset: "8px"
+    stitch_style: "dashed"
+
+layout:
+  plugin_title: "AUTOCLIP"
+  title_position: "top: 20px"
+  container_fixed: true
+
+parameters:
+  - name: clipThreshold
+    type: Float
+    range: [0.0, 100.0]
+    default: 0.0
+    units: "%"
+
+  - name: soloClipped
+    type: Bool
+    default: false

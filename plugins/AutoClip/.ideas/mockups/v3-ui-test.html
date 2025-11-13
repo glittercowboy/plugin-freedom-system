@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoClip - UI Mockup v3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            user-select: none;
+            -webkit-user-select: none;
+            background: #000;
+        }
+
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Plugin Container - Fixed 400x400 */
+        .plugin-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle at 50% 0%, #2a1808, #1a0800);
+            border: 2px solid #4a3020;
+            font-family: system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            gap: 40px;
+        }
+
+        /* Subtle stitched inner border */
+        .plugin-container::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            right: 8px;
+            bottom: 8px;
+            border: 1px dashed rgba(212, 180, 148, 0.15);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+
+        /* Plugin Title */
+        .plugin-title {
+            position: absolute;
+            top: 20px;
+            font-size: 16px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            color: #a88870;
+            text-shadow: 0 2px 3px rgba(0, 0, 0, 0.6);
+        }
+
+        /* Knob Container */
+        .knob-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .knob-label {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #986a4a;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .knob-body {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="noise"><feTurbulence baseFrequency="2.3" numOctaves="3" /></filter><rect width="100%" height="100%" filter="url(%23noise)" opacity="0.17" /></svg>'),
+                              radial-gradient(circle at 30% 25%, #6a4a2a, #5a3a1a 40%, #3a2010 70%, #2a1008 100%);
+            border: 3px solid #2a1408;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.6),
+                        inset 0 3px 3px rgba(90, 58, 26, 0.3),
+                        inset 0 -3px 3px rgba(0, 0, 0, 0.7);
+            cursor: ns-resize;
+            touch-action: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .knob-body:hover {
+            border-color: #c49564;
+        }
+
+        .knob-indicator-wrapper {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.05s ease-out;
+        }
+
+        .knob-indicator {
+            position: absolute;
+            top: 8%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 8px;
+            height: 45px;
+            background: linear-gradient(to bottom, #d4b494, #a88870);
+            border-radius: 3px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+        }
+
+        .knob-value {
+            font-size: 16px;
+            color: #a87a5a;
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            font-weight: 500;
+        }
+
+        /* Toggle Switch Container */
+        .toggle-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .toggle-track {
+            position: relative;
+            width: 64px;
+            height: 32px;
+            border-radius: 16px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="noise2"><feTurbulence baseFrequency="2.3" numOctaves="3" /></filter><rect width="100%" height="100%" filter="url(%23noise2)" opacity="0.17" /></svg>'),
+                              linear-gradient(to bottom, #3a2010, #2a1008);
+            border: 2px solid #2a1408;
+            box-shadow: inset 0 2px 2px rgba(0, 0, 0, 0.7),
+                        inset 0 -2px 2px rgba(90, 58, 26, 0.2);
+            cursor: pointer;
+            transition: background 0.2s ease, border-color 0.15s ease;
+        }
+
+        .toggle-track:hover {
+            border-color: #c49564;
+        }
+
+        .toggle-track.active {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg"><filter id="noise3"><feTurbulence baseFrequency="2.3" numOctaves="3" /></filter><rect width="100%" height="100%" filter="url(%23noise3)" opacity="0.17" /></svg>'),
+                              linear-gradient(to bottom, #5a4030, #4a3020);
+        }
+
+        .toggle-thumb {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, #987860, #786040);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.6);
+            transition: left 0.2s ease;
+        }
+
+        .toggle-track.active .toggle-thumb {
+            left: 35px;
+        }
+
+        .toggle-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            color: #986a4a;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Console Output */
+        #console {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            max-width: 300px;
+            max-height: 200px;
+            overflow-y: auto;
+            background: rgba(0, 0, 0, 0.9);
+            color: #0f0;
+            font-family: monospace;
+            font-size: 10px;
+            padding: 8px;
+            border-radius: 4px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="plugin-container">
+        <!-- Plugin Title -->
+        <div class="plugin-title">AUTOCLIP</div>
+
+        <!-- Knob Control -->
+        <div class="knob-container">
+            <div class="knob-label">THRESHOLD</div>
+            <div class="knob-body" id="clipThreshold" data-min="0" data-max="100" data-value="0">
+                <div class="knob-indicator-wrapper">
+                    <div class="knob-indicator"></div>
+                </div>
+            </div>
+            <div class="knob-value" id="clipThreshold-value">0%</div>
+        </div>
+
+        <!-- Toggle Switch -->
+        <div class="toggle-container">
+            <div class="toggle-track" id="soloClipped" data-value="false">
+                <div class="toggle-thumb"></div>
+            </div>
+            <div class="toggle-label">CLIP SOLO</div>
+        </div>
+    </div>
+
+    <!-- Console Output -->
+    <div id="console"></div>
+
+    <script>
+        // Disable context menu
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Console logging
+        function log(message) {
+            const console = document.getElementById('console');
+            const entry = document.createElement('div');
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            console.appendChild(entry);
+            console.scrollTop = console.scrollHeight;
+        }
+
+        // Knob control
+        const knob = document.getElementById('clipThreshold');
+        const knobValue = document.getElementById('clipThreshold-value');
+        const knobIndicator = knob.querySelector('.knob-indicator-wrapper');
+
+        let isDragging = false;
+        let startY = 0;
+        let startValue = 0;
+        const min = parseFloat(knob.dataset.min);
+        const max = parseFloat(knob.dataset.max);
+
+        knob.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startY = e.clientY;
+            startValue = parseFloat(knob.dataset.value);
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+
+            const deltaY = startY - e.clientY;
+            const range = max - min;
+            const sensitivity = range / 200;
+            let newValue = startValue + (deltaY * sensitivity);
+
+            newValue = Math.max(min, Math.min(max, newValue));
+            knob.dataset.value = newValue;
+
+            const percent = ((newValue - min) / (max - min)) * 100;
+            knobValue.textContent = `${Math.round(newValue)}%`;
+
+            const rotationRange = 270;
+            const rotation = (percent / 100) * rotationRange - (rotationRange / 2);
+            knobIndicator.style.transform = `rotate(${rotation}deg)`;
+
+            log(`clipThreshold: ${Math.round(newValue)}`);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (isDragging) {
+                isDragging = false;
+                log(`clipThreshold committed: ${Math.round(parseFloat(knob.dataset.value))}`);
+            }
+        });
+
+        // Toggle control
+        const toggle = document.getElementById('soloClipped');
+
+        toggle.addEventListener('click', () => {
+            const isActive = toggle.classList.toggle('active');
+            toggle.dataset.value = isActive;
+            log(`soloClipped: ${isActive}`);
+        });
+
+        log('AutoClip UI initialized');
+        log('Mock parameter state ready');
+    </script>
+</body>
+</html>
