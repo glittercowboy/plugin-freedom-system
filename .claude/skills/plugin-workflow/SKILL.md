@@ -350,7 +350,7 @@ See `references/state-management.md` for `checkStagePreconditions()` function.
 
   1. Verify state integrity (verifyStateIntegrity) → BLOCK if corrupted
   2. Check preconditions → If failed, BLOCK with reason
-  3. **MANDATORY: design-sync validation before Stage 2** → BLOCK if drift detected
+  3. **AUTOMATIC: Brief sync before Stage 2** → Update brief from mockup if needed
   4. Route to subagent based on stage number:
      - Stage 2 → foundation-shell-agent (single-pass, creates build system + parameters)
      - Stage 3 → dsp-agent (phase-aware dispatch)
@@ -386,74 +386,73 @@ For Stages 3-4 with complexity ≥3, use phase-aware dispatch to incrementally i
 
 For detailed algorithm, pseudocode, and examples, see [references/phase-aware-dispatch.md](references/phase-aware-dispatch.md).
 
-<design_sync_gate enforcement_level="MANDATORY">
-  **Purpose:** Prevent design drift before implementation begins.
+<creative_brief_sync enforcement_level="AUTOMATIC">
+  **Purpose:** Ensure creative brief reflects finalized mockup before implementation begins.
 
   **When:** BEFORE dispatching Stage 2 (foundation-shell-agent), IF mockup exists.
 
-  **Conditions:**
-  - IF plugins/[PluginName]/.ideas/mockups/ directory exists
-  - AND parameter-spec.md exists (mockup finalized)
-  - THEN design-sync validation is REQUIRED
-
   **Implementation:**
-  ```
+
   Before dispatching Stage 2:
 
-  1. Check for mockup:
-     - Look in plugins/[PluginName]/.ideas/mockups/
-     - Find latest version (highest v[N] prefix: v1-*, v2-*, etc.)
-     - If any mockup files exist: Invoke design-sync skill to validate brief ↔ mockup alignment
+  1. **Check for finalized mockup:**
+     ```bash
+     if [ -d "plugins/${PLUGIN_NAME}/.ideas/mockups" ] && [ -f "plugins/${PLUGIN_NAME}/.ideas/parameter-spec.md" ]; then
+       # Mockup finalized, proceed to step 2
+     else
+       # No mockup or not finalized, skip sync and proceed to Stage 2
+     fi
+     ```
 
-  2. If mockup exists:
-     - Run design-sync validation automatically
-     - Present findings with decision menu
-     - BLOCK Stage 2 until one of:
-       a) No drift detected (continue)
-       b) Acceptable evolution (user confirms)
-       c) Drift resolved (user updates brief or mockup)
-       d) User explicitly overrides (logged)
+  2. **Verify brief is current:**
+     - Read .continue-here.md for `brief_updated_from_mockup` flag
+     - IF flag == true AND mockup version matches:
+       - Skip sync (already done during finalization)
+       - Proceed to Stage 2 dispatch
+     - ELSE:
+       - Present info message:
+         ```
+         Notice: Mockup finalized but brief not yet updated.
+         This should have happened during mockup finalization.
+         Updating now to ensure alignment...
+         ```
+       - Proceed to step 3
 
-  3. If no mockup:
-     - Skip design-sync (no visual design to validate)
-     - Proceed to Stage 2 directly
-  ```
+  3. **Update creative brief from mockup:**
+     ```bash
+     # Find latest mockup version
+     LATEST_MOCKUP=$(find plugins/${PLUGIN_NAME}/.ideas/mockups -name "v*-ui.yaml" | sort -V | tail -n 1)
+     VERSION=$(basename "$LATEST_MOCKUP" | sed 's/v\([0-9]*\)-.*/\1/')
 
-  **Decision menu when drift detected:**
-  ```
-  ⚠️ Design-brief drift detected
+     # Execute sync script
+     .claude/utils/sync-brief-from-mockup.sh "${PLUGIN_NAME}" "${VERSION}"
 
-  [Findings from design-sync]
+     # Update state
+     echo "brief_updated_from_mockup: true" >> plugins/${PLUGIN_NAME}/.continue-here.md
+     echo "mockup_version_synced: ${VERSION}" >> plugins/${PLUGIN_NAME}/.continue-here.md
+     echo "brief_update_timestamp: $(date -u +%Y-%m-%dT%H:%M:%SZ)" >> plugins/${PLUGIN_NAME}/.continue-here.md
 
-  Cannot proceed to Stage 2 until resolved:
+     # Commit
+     git add plugins/${PLUGIN_NAME}/.ideas/creative-brief.md
+     git add plugins/${PLUGIN_NAME}/.continue-here.md
+     git commit -m "docs(${PLUGIN_NAME}): sync creative brief with finalized mockup v${VERSION}"
+     ```
 
-  1. Update brief - Document evolution and continue
-  2. Update mockup - Fix mockup to match brief
-  3. Override (not recommended) - Accept drift and proceed anyway
-  4. Cancel - Stop workflow, fix manually
-  5. Other
+  4. **Confirm and continue:**
+     ```
+     ✓ Creative brief updated from mockup v${VERSION}
 
-  Choose (1-5): _
-  ```
+     Contracts aligned. Proceeding to Stage 2 (Foundation)...
+     ```
 
-  **Why mandatory:**
-  - Catches misalignments before Stage 2 generates boilerplate
-  - Prevents implementing features not in brief
-  - Prevents missing features mentioned in brief
-  - Avoids 10+ minutes of wasted work on wrong implementation
-  - Ensures contracts remain single source of truth
+  **No user interaction required** - automatic sync replaces validation gate.
 
-  **Override logging:**
-  If user chooses override, log to .validation-overrides.yaml:
-  ```yaml
-  - timestamp: [ISO-8601]
-    validation-agent: design-sync
-    stage: pre-stage-2
-    severity: [none|attention|critical]
-    override-reason: "User proceeded despite drift"
-    findings: "[brief summary]"
-  ```
-</design_sync_gate>
+  **Rationale:**
+  - Mockup is source of truth for UI decisions after finalization
+  - Design iteration (v1, v2, v3) is normal workflow, not drift
+  - Automatic update removes decision gates and streamlines flow
+  - Preserves conceptual content while syncing UI-specific sections
+</creative_brief_sync>
 
 4. **Checkpoint enforcement after EVERY subagent:**
 

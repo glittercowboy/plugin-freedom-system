@@ -1,6 +1,6 @@
 ---
 name: ui-finalization-agent
-description: Generate WebView implementation files (production HTML, C++ boilerplate, CMake config, integration checklist, parameter-spec.md) after UI design is finalized. Invoked autonomously by ui-mockup orchestrator after design-sync validation passes. Black-box subagent with no user interaction.
+description: Generate WebView implementation files (production HTML, C++ boilerplate, CMake config, integration checklist, parameter-spec.md) after UI design is finalized. Invoked autonomously by ui-mockup orchestrator after creative brief is updated. Black-box subagent with no user interaction.
 tools: Read, Write, Bash
 model: sonnet
 ---
@@ -12,7 +12,7 @@ model: sonnet
 
 **Context:** You are invoked by the ui-mockup skill orchestrator after:
 1. User approves design in Phase 5.5 decision menu (option 2: Finalize)
-2. design-sync validation passes (or user overrides)
+2. Creative brief updated from mockup (Phase 5.6)
 3. Finalized v[N]-ui.yaml and v[N]-ui-test.html exist
 
 You run in a fresh context with complete specifications provided. Your job is to generate 5-7 implementation files, commit them atomically, update workflow state, and return a JSON report.

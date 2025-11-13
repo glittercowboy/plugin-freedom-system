@@ -650,13 +650,13 @@ Choose (1-4): _
 
 - **Option 1: Iterate** → User gives feedback → Return to Phase 2 with new version number (v2, v3, etc.)
 
-- **Option 2: Finalize** → Proceed to Phase 5.6 (automatic validation gate)
-  - MANDATORY: Automatically invoke design-sync skill to validate mockup ↔ creative brief consistency
-  - Detects drift (parameter mismatches, missing features, style divergence)
-  - User resolves any issues within design-sync
-  - **design-sync routes back to Phase 5.5 decision menu if issues found**
-  - Only proceed to Phase 6-10 if validation passes or user overrides
-  - See Phase 5.6 for validation protocol
+- **Option 2: Finalize** → Proceed to Phase 5.6 (automatic brief update)
+  - AUTOMATIC: Update creative-brief.md from finalized mockup
+  - Preserves conceptual sections (Vision, Use Cases, Inspirations)
+  - Updates UI sections (Parameters, UI Concept) from mockup
+  - No user interaction needed - mockup is source of truth
+  - Proceeds to Phase 6-10 after brief update
+  - See Phase 5.6 for update protocol
 
 - **Option 3: Save as template** → Invoke ui-template-library skill with "save" operation
   ```
@@ -672,43 +672,77 @@ Choose (1-4): _
 
 ---
 
-<validation_gate id="phase_5_6_automatic_validation" blocking="true" requires_gate="phase_5_5_approval">
-## Phase 5.6: Automatic Design Validation (Finalize Gate)
+<conditional_execution id="phase_5_6_brief_update" requires_gate="phase_5_5_approval">
+## Phase 5.6: Update Creative Brief from Finalized Mockup
 
-**Purpose:** Mandatory validation before generating implementation files. Prevents drift and ensures alignment.
+**Purpose:** Automatically sync creative-brief.md with finalized mockup design. Treats mockup as source of truth for UI decisions.
 
 **Trigger:** User selected "Finalize" option in Phase 5.5
 
 **Protocol:**
 
-1. **Invoke design-sync skill automatically:**
+1. **Check if creative-brief.md exists:**
+   - If no brief exists (standalone mockup mode): Skip this phase, proceed to Phase 6-10
+   - If brief exists: Continue to step 2
+
+2. **Determine plugin name and mockup version:**
+   - Extract from context or current working directory
+   - Find latest mockup version (highest v[N] in .ideas/mockups/)
+
+3. **Execute sync script:**
+   ```bash
+   .claude/utils/sync-brief-from-mockup.sh "${PLUGIN_NAME}" "${MOCKUP_VERSION}"
    ```
-   Invoke Skill tool:
-   - skill: "design-sync"
-   - context: "Automatic validation before finalization"
+
+4. **Script performs:**
+   - Reads current creative-brief.md
+   - Preserves conceptual sections: Overview, Vision, Use Cases, Inspirations, Technical Notes
+   - Updates Parameters section from parameter-spec.md
+   - Updates UI Concept section from v[N]-ui.yaml (layout, style, dimensions, features)
+   - Reconstructs brief maintaining section order
+   - Writes updated creative-brief.md
+
+5. **Update workflow state:**
+   - Mark in .continue-here.md:
+     ```yaml
+     brief_updated_from_mockup: true
+     mockup_version_synced: {N}
+     brief_update_timestamp: {ISO-8601}
+     ```
+
+6. **Commit changes:**
+   ```bash
+   git add plugins/${PLUGIN_NAME}/.ideas/creative-brief.md
+   git add plugins/${PLUGIN_NAME}/.continue-here.md
+   git commit -m "docs(${PLUGIN_NAME}): sync creative brief with finalized mockup v${VERSION}"
    ```
 
-2. **Handle validation results:**
+7. **Present confirmation:**
+   ```
+   ✓ Creative brief updated from mockup v{N}
 
-   **If validation passes (no drift):**
-   - Proceed directly to Phase 6-10 (generate implementation files)
+   Updated sections:
+   - Parameters (from parameter-spec.md)
+   - UI Concept (layout, visual style, dimensions from mockup)
 
-   **If drift detected:**
-   - design-sync skill presents drift findings and resolution options
-   - User chooses resolution (update mockup, update brief, override, review)
-   - **If user updates mockup:** Return to Phase 5.5 with updated design
-   - **If user updates brief:** Continue to Phase 6-10 with updated contracts
-   - **If user overrides:** Log override decision, continue to Phase 6-10
-   - **If user reviews:** Present findings, then return to Phase 5.5
+   Preserved sections:
+   - Vision (original concept intact)
+   - Use Cases (unchanged)
+   - Inspirations (unchanged)
+   - Technical Notes (unchanged)
 
-3. **Skip validation only if:**
-   - No creative-brief.md exists (standalone mockup mode)
-   - In that case, proceed directly to Phase 6-10
+   Proceeding to implementation file generation...
+   ```
 
-**Why mandatory:** Catches misalignment before generating 5 implementation files. Prevents wasted work and ensures contracts match design.
+8. **Continue to Phase 6-10:** Generate 5 implementation files
 
-**Fallback:** If design-sync skill unavailable, warn user and proceed with manual confirmation.
-</validation_gate>
+**Error Handling:**
+- If brief parse fails: Display error, offer manual fix option
+- If YAML parse fails: Fallback to minimal update (dimensions only), warn user
+- If git commit fails: Warn but continue (state recoverable from git)
+
+**No user interaction required** - automatic update with confirmation display only.
+</conditional_execution>
 
 ---
 
@@ -828,7 +862,7 @@ Choose (1-5): _
     3. Agent: Generate YAML + test HTML, commit, return JSON report
     4. Orchestrator: Parse JSON report, present Phase 5.5 menu
     5. If iterate: Orchestrator invokes NEW ui-design-agent instance
-    6. If finalize: Orchestrator runs design-sync validation (Phase 5.6)
+    6. If finalize: Orchestrator updates creative brief from mockup (Phase 5.6)
     7. Orchestrator: Invoke ui-finalization-agent via Task tool
     8. Agent: Generate 5 implementation files, commit, return JSON report
     9. Orchestrator: Parse JSON report, present completion menu (Phase 10.7)
@@ -965,7 +999,6 @@ Present completion menu after ui-finalization-agent successfully returns.
 **Also invokes:**
 
 - `ui-template-library` skill (if user saves aesthetic)
-- `design-sync` skill (Phase 5.6 automatic validation before finalization)
 
 **Creates (via subagents):**
 

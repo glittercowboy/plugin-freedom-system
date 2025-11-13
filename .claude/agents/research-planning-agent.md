@@ -338,13 +338,10 @@ ls -la plugins/${PLUGIN_NAME}/.ideas/mockups/v*-ui.yaml 2>/dev/null
 - Parameter in brief but not in mockup
 - Different parameter types or ranges
 
-**Invoke design-sync skill:**
-```
-Use Skill tool to invoke: design-sync
-Pass plugin name and detected conflicts
-```
+**Document conflicts:**
+Document identified conflicts in architecture.md for resolution during mockup finalization.
 
-Document sync results in architecture.md.
+Note: Conflicts will be auto-resolved when mockup is finalized (mockup becomes source of truth).
 
 </research_protocol>
 

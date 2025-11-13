@@ -1182,6 +1182,5 @@ After UI design agent completes:
 
 **Related skills:**
 - `ui-mockup` - Orchestrator skill that invokes this agent
-- `design-sync` - Validates mockup ↔ creative brief consistency
 - `ui-template-library` - Saves/applies aesthetic templates
 </reference_documentation>

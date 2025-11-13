@@ -10,7 +10,7 @@ Clear cached validation results to force re-validation.
 - `/clear-cache --expired` - Remove only expired entries
 
 **When to use:**
-- After changing validation logic (e.g., updating design-sync rules)
+- After changing validation logic
 - When suspecting stale cache results
 - After system updates or configuration changes
 - To force fresh validation on unchanged content
@@ -57,7 +57,6 @@ elif [ -n "$ARG" ]; then
     echo "✓ Cache cleared for $PLUGIN_NAME"
     echo ""
     echo "Next validations will run fresh analysis:"
-    echo "- design-sync (mockup ↔ brief alignment)"
     echo "- contract-checksums (integrity verification)"
     echo "- build-verification (if applicable)"
 
@@ -78,7 +77,6 @@ fi
 ```
 
 **Cache entry types:**
-- `design-sync:[PluginName]` - Mockup ↔ brief alignment results (24h expiry)
 - `contract-checksums:[PluginName]` - Contract integrity verification (24h expiry)
 - `build-verification:[PluginName]` - Build success status (6h expiry)
 

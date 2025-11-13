@@ -42,9 +42,9 @@ When these terms appear in the system, the plain-language equivalent will be sho
   - build-and-install.sh - Centralized build automation (7-phase pipeline: validate, build, install, verify)
   - verify-backup.sh - Backup integrity verification (Phase 7)
 - **Skills**: `.claude/skills/` - Each skill follows Anthropic's pattern with `SKILL.md`, `references/`, and `assets/` subdirectories
-  - plugin-workflow, plugin-ideation, plugin-improve (enhanced with regression testing), ui-mockup, context-resume, plugin-testing, plugin-lifecycle, build-automation, troubleshooting-docs, deep-research, design-sync, system-setup, workflow-reconciliation
+  - plugin-workflow, plugin-ideation, plugin-improve (enhanced with regression testing), ui-mockup, context-resume, plugin-testing, plugin-lifecycle, build-automation, troubleshooting-docs, deep-research, system-setup, workflow-reconciliation
 - **Subagents**: `.claude/agents/` - research-planning-agent, foundation-shell-agent, dsp-agent, gui-agent, validation-agent, troubleshoot-agent
-- **Commands**: `.claude/commands/` - /setup, /dream, /implement, /improve, /continue, /test, /install-plugin, /uninstall, /show-standalone, /doc-fix, /research, /sync-design
+- **Commands**: `.claude/commands/` - /setup, /dream, /implement, /improve, /continue, /test, /install-plugin, /uninstall, /show-standalone, /doc-fix, /research
 - **Hooks**: `.claude/hooks/` - Validation gates (PostToolUse, SubagentStop, UserPromptSubmit, Stop, PreCompact, SessionStart)
 - **Knowledge Base**: `troubleshooting/` - Dual-indexed (by-plugin + by-symptom) problem solutions
 
@@ -64,7 +64,7 @@ When these terms appear in the system, the plain-language equivalent will be sho
 3. **Discovery through play** - Features found via slash command autocomplete and decision menus
 4. **Instructed routing** - Commands expand to prompts, Claude invokes skills
 5. **Required Reading injection** - Critical patterns (`juce8-critical-patterns.md`) are mandatory reading for all subagents to prevent repeat mistakes
-6. **Proactive validation** - Errors caught early (dependencies at start, design-sync before Stage 2, silent failures at compile-time)
+6. **Proactive validation** - Errors caught early (dependencies at start, brief sync before Stage 2, silent failures at compile-time)
 
 ## Proactive Validation (Error Prevention)
 
@@ -75,10 +75,10 @@ The system prevents late-stage failures through multi-layer validation:
 - Reports critical errors with actionable fix commands
 - Prevents 10+ minutes of work before discovering missing dependencies
 
-**Stage 0→2 Transition (design-sync gate):**
-- MANDATORY validation of mockup ↔ creative brief alignment
-- Catches design drift before Stage 2 generates boilerplate
-- Blocks implementation if contracts misaligned (missing features, scope creep, style mismatch)
+**Stage 0→2 Transition (brief sync):**
+- Automatic update of creative brief from finalized mockup
+- Ensures contracts reflect final UI design before Stage 2
+- No manual reconciliation needed (mockup is source of truth)
 
 **During Implementation (PostToolUse hook):**
 - Contract immutability enforcement (blocks modifications to .ideas/*.md during Stages 2-4)
@@ -219,7 +219,6 @@ After Stage 3 (DSP) completes, user chooses:
 
 - **system-setup** (`.claude/skills/system-setup/`) - Dependency validation and environment configuration
 - **plugin-lifecycle** (`.claude/skills/plugin-lifecycle/`) - Installation/uninstallation management
-- **design-sync** (`.claude/skills/design-sync/`) - Mockup ↔ brief validation, drift detection
 - **deep-research** (`.claude/skills/deep-research/`) - Multi-level problem investigation (3-level graduated protocol)
 - **troubleshooting-docs** (`.claude/skills/troubleshooting-docs/`) - Knowledge base capture with dual-indexing
 - **plugin-improve** (`.claude/skills/plugin-improve/`) - Version management with regression testing (enhanced)
@@ -248,7 +247,6 @@ After Stage 3 (DSP) completes, user chooses:
 **Quality:**
 
 - `/test [Name]` - Run validation suite
-- `/sync-design [Name]` - Validate mockup ↔ brief consistency
 - `/research [topic]` - Deep investigation (3-level protocol)
 - `/doc-fix` - Document solved problems (with option to promote to Required Reading)
 - `/add-critical-pattern` - Directly add current problem to Required Reading (fast path)
@@ -283,5 +281,5 @@ Build → Test → Find Issue → Research → Improve → Document → Validate
 - **deep-research** finds solutions (3-level graduated protocol: Quick → Moderate → Deep)
 - **plugin-improve** applies changes (with regression testing and backup verification)
 - **troubleshooting-docs** captures knowledge (dual-indexed for fast lookup)
-- **design-sync** prevents drift (validates contracts before implementation)
+- **ui-mockup finalization** auto-updates brief (treats mockup as source of truth for UI decisions)
 - **plugin-lifecycle** manages deployment (install/uninstall with cache clearing)

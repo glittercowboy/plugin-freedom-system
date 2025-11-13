@@ -579,40 +579,6 @@ See `.claude/schemas/README.md` for validation examples.
 
 ---
 
-### design-sync → (multiple contracts)
-
-**When:** Before Stage 2 (validates mockup ↔ brief consistency)
-
-**Sends:**
-- Plugin name (string)
-- Creative brief path (string)
-- Mockup file path (string)
-
-**Expects:**
-```json
-{
-  "status": "aligned" | "drift_detected",
-  "drift_issues": [
-    {
-      "category": "missing_feature",
-      "brief_item": "Vintage VU meter",
-      "mockup_status": "not found",
-      "severity": "major"
-    }
-  ],
-  "recommendation": "Fix mockup before Stage 2"
-}
-```
-
-**Error handling:**
-- Missing brief → design-sync returns error
-- Missing mockup → design-sync returns error
-- Parse error → design-sync reports which file failed
-
-**Contract:** design-sync is READ-ONLY. Never modifies files. Reports drift for user decision.
-
----
-
 ### troubleshooting-docs → juce8-critical-patterns.md
 
 **When:** User promotes solved problem to Required Reading

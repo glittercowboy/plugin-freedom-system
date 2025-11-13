@@ -467,7 +467,7 @@ What's next?
 1. Continue to Stage 2 - Foundation (via /implement) (recommended)
 2. Review plan.md details
 3. Adjust complexity assessment
-4. Review contracts (parameter-spec, architecture) ← Discover design-sync
+4. Review contracts (parameter-spec, architecture)
 5. Pause here
 6. Other
 
@@ -481,7 +481,7 @@ Choose (1-6): _
 | 1 or "continue" | Display handoff message, exit skill |
 | 2 or "review" | Display plan.md, re-present menu |
 | 3 | Recalculate complexity with user input, update plan.md |
-| 4 | Display contracts, offer design-sync skill |
+| 4 | Display contracts, re-present menu |
 | 5 or "pause" | Exit skill with handoff ready |
 | 6 or "other" | Ask "What would you like to do?", re-present menu |
 

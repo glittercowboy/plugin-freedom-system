@@ -86,15 +86,5 @@
         "commit_template": "fix({name}): {description}"
       }
     }
-  },
-  "design-sync": {
-    "phases": {
-      "complete": {
-        "state_files": [".continue-here.md"],
-        "required_files": ["design-sync-report.md"],
-        "plugins_md_status": null,
-        "commit_template": "docs({name}): Design sync validation complete"
-      }
-    }
   }
 }

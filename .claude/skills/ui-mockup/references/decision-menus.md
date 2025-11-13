@@ -55,15 +55,15 @@ Choose (1-4): _
   - Do NOT proceed to Phases 6-10
 
 **Option 2: Finalize design**
-- Action: Proceed to Phase 5.6 (automatic validation gate)
+- Action: Proceed to Phase 5.6 (automatic brief update)
 - This is the ONLY option that proceeds to Phase B (files 3-7)
 - Verification steps:
   1. Check WebView constraints validation (Phase 5.3 already executed)
-  2. Invoke design-sync skill automatically (Phase 5.6)
+  2. Update creative-brief.md from mockup (Phase 5.6 - automatic)
   3. Verify user explicitly confirmed finalization
   4. Mark design as finalized in YAML file
   5. Proceed to Phase 6-10 (generate 5 implementation files)
-- If any verification fails: show errors, return to Phase 5.5 menu
+- If any step fails: show errors, offer retry or manual fix
 
 **Option 3: Save as template**
 - Action: Invoke ui-template-library skill

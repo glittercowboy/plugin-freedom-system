@@ -200,10 +200,6 @@ Detect current workflow context, validate state file currency, and remediate gap
         6. Other
       </menu_options>
 
-      <discovery_option>
-        If workflow is plugin-workflow AND stage >= 4:
-          Add as final option before "Other": "Run design sync ← Validate mockup matches brief (invokes design-sync skill)"
-      </discovery_option>
     </decision_menu>
 
     <blocking_wait>
