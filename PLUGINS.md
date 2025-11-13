@@ -29,9 +29,10 @@
 | ClapMachine | 💡 Ideated | - | 2025-11-10 |
 | DriveVerb | 📦 Installed | 1.0.2 | 2025-11-12 |
 | FlutterVerb | 📦 Installed | 1.0.3 | 2025-11-12 |
-| LushVerb | 📦 Installed | 1.0.3 | 2025-11-12 |
+| LushVerb | 💡 Ideated | - | 2025-11-12 |
 | OrganicHats | 📦 Installed | 1.0.0 | 2025-11-12 |
 | DrumRoulette | 📦 Installed | 1.0.0 | 2025-11-12 |
+| Scatter | 💡 Ideated | - | 2025-11-12 |
 
 ### GainKnob
 
@@ -311,13 +312,9 @@ Tape-driven plate reverb with extreme wow and flutter modulation for textured, a
 
 ### LushVerb
 
-**Status:** 📦 **Installed**
-**Version:** 1.0.3
+**Status:** 💡 **Ideated**
 **Created:** 2025-11-11
-**Completed:** 2025-11-11
-**Installed:** 2025-11-12
 **Type:** Audio Effect (Reverb)
-**Complexity:** 5.0 (maximum - phased implementation)
 
 **Description:**
 Stunning, lush algorithmic reverb inspired by Strymon BigSky. Four simple controls deliver consistently gorgeous ambient/ethereal reverb with infinite tails, built-in modulation, and subtle shimmer.
@@ -328,55 +325,19 @@ Stunning, lush algorithmic reverb inspired by Strymon BigSky. Four simple contro
 - SHIMMER: 0-100%, default 30% (+1 octave pitch-shifted signal amount)
 - MIX: 0-100%, default 30% (dry/wet blend)
 
-**DSP:**
-- Core: juce::dsp::Reverb engine with SIZE and DAMPING control
-- Shimmer: FFT-based phase vocoder (+1 octave, 2048-point FFT with 4x overlap)
-- Modulation: Dual LFO (0.3Hz + 0.5Hz) with Lagrange interpolation
-- Routing: Input → Shimmer → Reverb → Modulation → Dry/Wet Mix
-- Latency: ~46ms (2048 samples at 44.1kHz)
+**Preserved Artifacts:**
+- Creative brief: `.ideas/creative-brief.md`
+- Parameter spec: `.ideas/parameter-spec.md`
+- UI mockups: `.ideas/mockups/` (v3 finalized)
 
-**GUI:** Industrial 19" rack unit aesthetic (500×300px). WebView UI with 4 interactive rotary knobs, real-time LED output meter with ballistic motion, gold accents on brushed metal texture.
-
-**Validation:**
-- ✓ Factory presets: 7 presets (Default, Small Room, Large Hall, Shimmer Pad, Dark Ambient, Bright Plate, Instant Inspiration)
-- ✓ CHANGELOG.md: Generated in Keep a Changelog format (v1.0.0)
-- ✓ Build verification: Compiles with zero errors
-- ⚠ Pluginval: Skipped (not installed on system)
-
-**Formats:** VST3, AU, Standalone
-
-**Installation Locations:**
-- VST3: `~/Library/Audio/Plug-Ins/VST3/LushVerb.vst3` (4.2 MB)
-- AU: `~/Library/Audio/Plug-Ins/Components/LushVerb.component` (4.1 MB)
-
-**Use Cases:**
-- Versatile mixing tool (vocals, instruments)
-- Creative ambient soundscapes
-- Instant inspiration—always sounds gorgeous
-
-**Inspirations:**
-- Strymon BigSky (lush algorithmic reverb)
-- Valhalla VintageVerb (smooth, musical)
-- Eventide Blackhole (infinite tails)
+**Backup:**
+- Implementation archived: `backups/rollbacks/LushVerb_reset_20251112_223045.tar.gz` (57 KB)
 
 **Lifecycle Timeline:**
 - **2025-11-11:** Creative brief completed
 - **2025-11-11:** UI mockup v3 finalized
-- **2025-11-11 (Stage 0):** Research completed - DSP architecture documented
-- **2025-11-11 (Stage 1):** Planning complete - Complexity 5.0 (phased implementation, 3 DSP phases + 3 GUI phases)
-- **2025-11-11 (Stage 2):** Foundation complete - Build system operational, compiles successfully
-- **2025-11-11 (Stage 3):** Shell complete - 4 parameters implemented (SIZE, DAMPING, SHIMMER, MIX)
-- **2025-11-11 (Stage 4.1):** Core reverb complete - juce::dsp::Reverb + DryWetMixer operational
-- **2025-11-11 (Stage 4.2):** Modulation complete - Dual LFO system with delay line
-- **2025-11-11 (Stage 4.3):** Shimmer complete - FFT phase vocoder (+1 octave)
-- **2025-11-11 (Stage 5.1):** GUI layout complete - WebView integration with v3 mockup
-- **2025-11-11 (Stage 5.2):** Parameter binding complete - 4 interactive knobs with relative drag
-- **2025-11-11 (Stage 5.3):** LED meter complete - Real-time output visualization with ballistics
-- **2025-11-11 (Stage 6):** Validation complete - 7 factory presets, CHANGELOG.md
-- **2025-11-11 (v1.0.0):** Installed to system folders (VST3 + AU)
-- **2025-11-11 (v1.0.1):** Fixed WebView knobs frozen issue - ES6 module loading corrected
-- **2025-11-12 (v1.0.2):** Fixed shimmer mix behavior - changed from crossfade to parallel add (shimmer at 100% no longer silent)
-- **2025-11-12 (v1.0.3):** Fixed shimmer FFT pitch shifter DSP errors - corrected algorithm direction, removed double normalization, added window compensation (shimmer now audible)
+- **2025-11-11:** Implementation completed through Stage 6 (v1.0.0-v1.0.3)
+- **2025-11-12:** Reset to ideation - implementation removed, concept preserved
 
 **Known Issues:**
 - None
@@ -530,6 +491,50 @@ Per-Slot (×8):
 **Installation Locations:**
 - VST3: `~/Library/Audio/Plug-Ins/VST3/DrumRoulette.vst3` (5.5 MB)
 - AU: `~/Library/Audio/Plug-Ins/Components/DrumRoulette.component` (5.4 MB)
+
+**Known Issues:**
+- None
+
+**Last Updated:** 2025-11-12
+
+### Scatter
+
+**Status:** 💡 **Ideated**
+**Created:** 2025-11-12
+**Type:** Audio Effect (Delay)
+
+**Description:**
+Granular reversed delay with beautiful stuttering grains, randomized pitch (quantized to musical scales), and randomized stereo placement. Creates evolving textural ambience with musical coherence.
+
+**Parameters (9 total):**
+- Delay Time: 100ms-2s (synced), default 500ms (buffer length, tempo-synced note values)
+- Grain Size: 5-500ms, default 100ms (individual grain length)
+- Grain Density: 0-100%, default 50% (overlap amount between grains)
+- Pitch Random: 0-100%, default 30% (pitch randomization amount, ±7 semitones max)
+- Scale: Chromatic/Major/Minor/etc, default Chromatic (quantization scale)
+- Root Note: C-B, default C (scale root)
+- Pan Random: 0-100%, default 75% (stereo randomization amount)
+- Feedback: 0-100%, default 30% (traditional delay feedback)
+- Mix: 0-100%, default 50% (dry/wet blend)
+
+**DSP:** Circular delay buffer with tempo sync. Grain scheduler with overlap-based density control. Per-grain reverse playback with windowing (Hann/Hamming). Pitch-shifting per grain with scale quantization (±7 semitone range). Random pan position generator. Each grain randomly forward or reverse.
+
+**GUI:** Single-page interface with grain cloud visualization (shows position in time/stereo/pitch space). Tempo sync indicator. Scale/root note selector. Visual feedback for density and randomization.
+
+**Use Cases:**
+- Creating evolving soundscapes and atmospheric beds
+- Textural ambience for melodic loops or pads
+- Transforming percussion into stuttering, pitched textures
+- Adding ambient depth with quantized harmonic delays
+- Sound design for film/games requiring abstract, musical atmospheres
+
+**Inspirations:**
+- Granular: GrainScanner, Portal, Granite, Iris
+- Ambient: Cosmos, Shimmer, CloudSeed
+- Reverse delays: Backmask, H-Delay reverse mode, EchoBoy
+
+**Lifecycle Timeline:**
+- **2025-11-12:** Creative brief completed
 
 **Known Issues:**
 - None

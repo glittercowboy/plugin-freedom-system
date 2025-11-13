@@ -166,7 +166,9 @@ void TapeAgeAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
 
     // Apply tanh saturation manually in oversampled domain
     // Calculate makeup gain to compensate for volume increase (v1.1.0)
-    float makeupGain = 1.0f / std::tanh(gain);
+    // Simple empirical formula: reduce output level proportionally to gain
+    // This keeps perceived loudness roughly constant
+    float makeupGain = 1.0f / std::sqrt(gain);
 
     for (size_t channel = 0; channel < oversampledBlock.getNumChannels(); ++channel)
     {
