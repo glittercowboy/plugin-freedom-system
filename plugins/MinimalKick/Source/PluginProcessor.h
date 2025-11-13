@@ -41,6 +41,10 @@ private:
     float currentFrequency { 0.0f };
     double sampleRate { 44100.0 };
 
+    // Pitch envelope state
+    float pitchEnvelopeValue { 0.0f };  // Normalized 0.0 to 1.0 (decays from 1.0 to 0.0)
+    int pitchEnvelopeSampleCount { 0 };
+
     // APVTS comes AFTER DSP components
     juce::AudioProcessorValueTreeState parameters;
 

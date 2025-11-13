@@ -544,7 +544,7 @@ Granular reversed delay with beautiful stuttering grains, randomized pitch (quan
 
 ### MinimalKick
 
-**Status:** 🚧 Stage 3
+**Status:** 🚧 Stage 4.1
 **Type:** Synth
 **Created:** 2025-11-12
 **Complexity:** 5.0 (Complex - phased implementation)
@@ -574,6 +574,7 @@ Minimal house kick drum synthesizer with sine wave + pitch envelope architecture
 - **2025-11-13 (Stage 1):** Planning completed - Complexity 5.0, 6-phase implementation plan created
 - **2025-11-13 (Stage 2):** Foundation complete - Project structure created, JUCE 8 patterns followed
 - **2025-11-13 (Stage 3):** Shell complete - 5 APVTS parameters implemented (sweep, time, attack, decay, drive)
+- **2025-11-13 (Stage 4 Phase 4.1):** Core synthesis complete - Oscillator + MIDI + amplitude envelope (attack/decay working)
 
 **Known Issues:**
 - None

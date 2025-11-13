@@ -98,9 +98,13 @@ void MinimalKickAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
     // Read parameters (atomic, real-time safe)
     auto* attackParam = parameters.getRawParameterValue("attack");
     auto* decayParam = parameters.getRawParameterValue("decay");
+    auto* sweepParam = parameters.getRawParameterValue("sweep");
+    auto* timeParam = parameters.getRawParameterValue("time");
 
     float attackMs = attackParam->load();
     float decayMs = decayParam->load();
+    float sweepSemitones = sweepParam->load();
+    float pitchDecayMs = timeParam->load();
 
     // Process MIDI messages
     for (const auto metadata : midiMessages)
@@ -113,13 +117,14 @@ void MinimalKickAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
             currentNote = message.getNoteNumber();
             currentFrequency = juce::MidiMessage::getMidiNoteInHertz(currentNote);
 
-            // Set oscillator frequency
-            oscillator.setFrequency(currentFrequency);
-
             // Reset oscillator phase for consistent attack
             oscillator.reset();
 
-            // Configure and trigger envelope
+            // Reset pitch envelope
+            pitchEnvelopeValue = 1.0f;
+            pitchEnvelopeSampleCount = 0;
+
+            // Configure and trigger amplitude envelope
             juce::ADSR::Parameters envParams;
             envParams.attack = attackMs / 1000.0f;     // Convert ms to seconds
             envParams.decay = decayMs / 1000.0f;       // Convert ms to seconds
@@ -143,9 +148,30 @@ void MinimalKickAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, j
 
     if (envelope.isActive())
     {
+        // Calculate pitch envelope decay rate
+        // Formula: decayRate = -log(0.001) / decayTimeSeconds
+        // This makes the envelope decay to 0.1% of initial value in the specified time
+        float pitchDecaySeconds = pitchDecayMs / 1000.0f;
+        float pitchDecayRate = -std::log(0.001f) / pitchDecaySeconds;
+
         // Process mono (oscillator generates single channel)
         for (int sample = 0; sample < numSamples; ++sample)
         {
+            // Update pitch envelope (exponential decay)
+            float elapsedSeconds = pitchEnvelopeSampleCount / static_cast<float>(sampleRate);
+            pitchEnvelopeValue = std::exp(-pitchDecayRate * elapsedSeconds);
+            pitchEnvelopeSampleCount++;
+
+            // Calculate modulated frequency
+            // Formula: freq = baseFreq * pow(2.0, envelopeValue * sweepSemitones / 12.0)
+            // This converts semitone offset to frequency multiplier
+            float pitchOffsetSemitones = pitchEnvelopeValue * sweepSemitones;
+            float frequencyMultiplier = std::pow(2.0f, pitchOffsetSemitones / 12.0f);
+            float modulatedFrequency = currentFrequency * frequencyMultiplier;
+
+            // Set oscillator frequency (juce::dsp::Oscillator handles phase continuity)
+            oscillator.setFrequency(modulatedFrequency);
+
             // Generate sine wave sample
             float oscillatorSample = oscillator.processSample(0.0f);
 
