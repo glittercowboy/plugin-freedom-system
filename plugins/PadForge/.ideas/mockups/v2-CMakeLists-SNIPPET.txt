@@ -1,0 +1,50 @@
+# ============================================================================
+# WebView CMake Configuration Snippet for PadForge
+# ============================================================================
+# IMPORTANT: This is a SNIPPET to ADD to your plugin's CMakeLists.txt
+#
+# Generated from: v2-ui.yaml
+# Date: 2025-11-14
+#
+# ADD this configuration AFTER your existing juce_add_plugin() configuration.
+# ============================================================================
+
+# WebView UI Resources
+# Embed all UI files into plugin binary
+juce_add_binary_data(PadForge_UIResources
+    SOURCES
+        Source/ui/public/index.html
+        Source/ui/public/js/juce/index.js
+        Source/ui/public/js/juce/check_native_interop.js
+        # Add more resources as needed (CSS, images, fonts)
+)
+
+# Link UI resources to plugin
+target_link_libraries(PadForge
+    PRIVATE
+        PadForge_UIResources
+        juce::juce_gui_extra  # Required for WebBrowserComponent
+)
+
+# Enable WebView on supported platforms
+target_compile_definitions(PadForge
+    PUBLIC
+        JUCE_WEB_BROWSER=1
+        JUCE_USE_CURL=0
+)
+
+# ============================================================================
+# Resource Naming Convention
+# ============================================================================
+# File paths are converted to BinaryData identifiers:
+#   Source/ui/public/index.html                   -> BinaryData::index_html
+#   Source/ui/public/js/juce/index.js             -> BinaryData::index_js
+#   Source/ui/public/js/juce/check_native_interop.js -> BinaryData::check_native_interop_js
+#
+# Rules:
+#   - Directory separators (/) become underscores (_)
+#   - Dots (.) become underscores (_)
+#   - Only the filename is used (path prefix removed)
+#
+# Use these identifiers in your PluginEditor.cpp getResource() method
+# ============================================================================

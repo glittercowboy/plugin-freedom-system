@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PadForge</title>
+
+  <style>
+    /* CRITICAL: WebView constraints - NO viewport units */
+    html, body {
+      height: 100%;  /* REQUIRED - replaces viewport units */
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      /* Native application feel */
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      -webkit-touch-callout: none;
+      -webkit-tap-highlight-color: transparent;
+      cursor: default;
+      overflow: hidden;
+    }
+
+    /* Plugin container fills 100% of window */
+    .container {
+      width: 100%;   /* Now 100% of plugin window */
+      height: 100%;  /* Now 100% of plugin window */
+      background: #c9a87c;  /* Sandy earth tone */
+      position: relative;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Background grain texture */
+    .container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(90, 70, 50, 0.03) 2px, rgba(90, 70, 50, 0.03) 4px),
+        repeating-linear-gradient(90deg, transparent, transparent 2px, rgba(90, 70, 50, 0.03) 2px, rgba(90, 70, 50, 0.03) 4px);
+      opacity: 0.6;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+    }
+
+    /* Plugin name */
+    .plugin-name {
+      position: absolute;
+      top: 23px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 24px;
+      font-weight: bold;
+      color: #3a2a1a;
+      letter-spacing: 2px;
+    }
+
+    /* Knob styling - vintage bakelite */
+    .knob-container {
+      position: absolute;
+      text-align: center;
+    }
+
+    .knob-label {
+      font-size: 13px;
+      color: #4a3a2a;
+      margin-bottom: 6px;
+      font-weight: 500;
+    }
+
+    .knob {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: #8b6f47;  /* Bakelite brown */
+      position: relative;
+      cursor: pointer;
+      margin: 0 auto;
+      box-shadow:
+        inset -3px -3px 6px rgba(0, 0, 0, 0.4),
+        inset 3px 3px 6px rgba(212, 184, 150, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.25);
+      transform-origin: center center;
+      transition: transform 50ms;
+    }
+
+    .knob-small {
+      width: 50px;
+      height: 50px;
+    }
+
+    /* Knob indicator - rotates with knob body */
+    .knob-indicator {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 3px;
+      height: 20px;
+      background: #3a2a1a;
+      border-radius: 2px;
+      pointer-events: none;
+    }
+
+    .knob-small .knob-indicator {
+      height: 15px;
+      top: 6px;
+    }
+
+    /* Knob value display */
+    .knob-value {
+      font-size: 12px;
+      color: #3a2a1a;
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* RANDOMIZE button - raised tactile */
+    .randomize-button {
+      position: absolute;
+      left: 120px;  /* FIXED: Perfectly centered (400-160)/2 = 120px */
+      top: 195px;
+      width: 160px;
+      height: 60px;
+      background: linear-gradient(145deg, #d8b88e, #9d7a54);
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: bold;
+      color: #3a2a1a;
+      letter-spacing: 2px;
+      cursor: pointer;
+      box-shadow:
+        0 5px 15px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.2);
+      transition: all 100ms;
+      user-select: none;
+    }
+
+    .randomize-button:hover {
+      background: linear-gradient(145deg, #e0c29a, #a98260);
+      box-shadow:
+        0 6px 18px rgba(0, 0, 0, 0.35),
+        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+    }
+
+    .randomize-button:active {
+      transform: translateY(2px);
+      box-shadow:
+        0 3px 8px rgba(0, 0, 0, 0.25),
+        inset 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Preset controls */
+    .preset-dropdown {
+      position: absolute;
+      left: 20px;
+      top: 300px;
+      width: 180px;
+      height: 30px;
+      background: #f5e6d3;
+      border: 1px solid #8b6f47;
+      border-radius: 4px;
+      padding: 5px 8px;
+      font-size: 13px;
+      color: #3a2a1a;
+      cursor: pointer;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+      user-select: none;
+    }
+
+    .preset-button {
+      position: absolute;
+      top: 300px;
+      width: 70px;
+      height: 30px;
+      background: linear-gradient(145deg, #d8b88e, #9d7a54);
+      border: none;
+      border-radius: 4px;
+      font-size: 13px;
+      font-weight: 500;
+      color: #3a2a1a;
+      cursor: pointer;
+      box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+      transition: all 80ms;
+      user-select: none;
+    }
+
+    .preset-button:hover {
+      background: linear-gradient(145deg, #e0c29a, #a98260);
+    }
+
+    .preset-button:active {
+      transform: translateY(1px);
+      box-shadow:
+        0 1px 3px rgba(0, 0, 0, 0.15),
+        inset 0 1px 2px rgba(0, 0, 0, 0.15);
+    }
+
+    #save_preset {
+      left: 210px;
+    }
+
+    #load_preset {
+      left: 290px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Plugin name -->
+    <div class="plugin-name">PadForge</div>
+
+    <!-- Volume knob -->
+    <div class="knob-container" style="left: 40px; top: 75px;">
+      <div class="knob-label">Volume</div>
+      <div class="knob" id="volume" data-param="volume" data-min="0" data-max="1" data-value="0.7">
+        <div class="knob-indicator"></div>
+      </div>
+      <div class="knob-value" id="volume-value">0.70</div>
+    </div>
+
+    <!-- Brightness knob -->
+    <div class="knob-container" style="left: 165px; top: 75px;">
+      <div class="knob-label">Brightness</div>
+      <div class="knob" id="brightness" data-param="brightness" data-min="0" data-max="1" data-value="0.5">
+        <div class="knob-indicator"></div>
+      </div>
+      <div class="knob-value" id="brightness-value">0.50</div>
+    </div>
+
+    <!-- Space knob -->
+    <div class="knob-container" style="left: 290px; top: 75px;">
+      <div class="knob-label">Space</div>
+      <div class="knob" id="space" data-param="space" data-min="0" data-max="1" data-value="0.3">
+        <div class="knob-indicator"></div>
+      </div>
+      <div class="knob-value" id="space-value">0.30</div>
+    </div>
+
+    <!-- RANDOMIZE button (CENTERED) -->
+    <button class="randomize-button" id="randomize_button">RANDOMIZE</button>
+
+    <!-- Randomize Amount knob (VISIBLE) -->
+    <div class="knob-container" style="left: 295px; top: 200px;">
+      <div class="knob-label">Amount</div>
+      <div class="knob knob-small" id="randomize_amount" data-param="randomizeAmount" data-min="0" data-max="1" data-value="0.8">
+        <div class="knob-indicator"></div>
+      </div>
+      <div class="knob-value" id="randomize_amount-value">0.80</div>
+    </div>
+
+    <!-- Preset controls -->
+    <select class="preset-dropdown" id="preset_dropdown">
+      <option value="0">Init</option>
+      <option value="1">Warm Pad</option>
+      <option value="2">Bright Shimmer</option>
+      <option value="3">Dark Ambient</option>
+      <option value="4">Evolving Texture</option>
+    </select>
+
+    <button class="preset-button" id="save_preset">Save</button>
+    <button class="preset-button" id="load_preset">Load</button>
+  </div>
+
+  <script type="module">
+    // ====================================================================
+    // JUCE FRONTEND LIBRARY IMPORT
+    // ====================================================================
+
+    import { getSliderState } from "./js/juce/index.js";
+
+    // ====================================================================
+    // NATIVE APPLICATION FEEL
+    // ====================================================================
+
+    // Disable right-click context menu
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Disable default drag behaviors
+    document.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    });
+
+    // ====================================================================
+    // ERROR HANDLING
+    // ====================================================================
+
+    window.addEventListener("error", (e) => {
+      console.error("JavaScript error:", e.message, e.filename, e.lineno);
+    });
+
+    window.addEventListener("unhandledrejection", (e) => {
+      console.error("Unhandled promise rejection:", e.reason);
+    });
+
+    // ====================================================================
+    // PARAMETER BINDING
+    // ====================================================================
+
+    // Verify JUCE backend is connected
+    if (!window.__JUCE__) {
+      console.error("JUCE backend not available");
+      throw new Error("JUCE backend not connected");
+    }
+
+    console.log("JUCE backend connected");
+
+    // Knob interaction logic
+    document.addEventListener("DOMContentLoaded", () => {
+      const knobs = document.querySelectorAll('.knob');
+
+      knobs.forEach(knob => {
+        let isDragging = false;
+        let lastY = 0;  // Track last frame Y position (relative drag)
+
+        const paramId = knob.dataset.param;
+        const min = parseFloat(knob.dataset.min);
+        const max = parseFloat(knob.dataset.max);
+        let currentValue = parseFloat(knob.dataset.value);
+
+        const valueDisplay = document.getElementById(`${knob.id}-value`);
+
+        // Get JUCE parameter state
+        const paramState = getSliderState(paramId);
+
+        if (!paramState) {
+          console.error(`Failed to get slider state for ${paramId}`);
+          return;
+        }
+
+        function updateKnob(value) {
+          currentValue = Math.max(min, Math.min(max, value));
+          const normalized = (currentValue - min) / (max - min);
+
+          // Rotate knob (-135° to +135°, 270° total range)
+          const degrees = -135 + (normalized * 270);
+          knob.style.transform = `rotate(${degrees}deg)`;
+
+          // Update value display
+          valueDisplay.textContent = currentValue.toFixed(2);
+
+          // Send to JUCE backend
+          paramState.setNormalisedValue(normalized);
+        }
+
+        // Initialize knob position from C++ parameter value
+        const initialValue = paramState.getNormalisedValue();
+        currentValue = min + (initialValue * (max - min));
+        updateKnob(currentValue);
+
+        // Listen for C++ → JS updates (automation, preset recall)
+        paramState.valueChangedEvent.addListener(() => {
+          const newNormalized = paramState.getNormalisedValue();
+          const newValue = min + (newNormalized * (max - min));
+          currentValue = newValue;
+
+          // Update visual
+          const degrees = -135 + (newNormalized * 270);
+          knob.style.transform = `rotate(${degrees}deg)`;
+          valueDisplay.textContent = currentValue.toFixed(2);
+        });
+
+        // Mouse interaction - RELATIVE DRAG
+        knob.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          lastY = e.clientY;  // Track CURRENT position, not start
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+
+          // Calculate frame-delta (since LAST FRAME)
+          const deltaY = lastY - e.clientY;
+          const deltaValue = (deltaY / 200) * (max - min);
+          updateKnob(currentValue + deltaValue);
+
+          lastY = e.clientY;  // Update for next frame
+        });
+
+        document.addEventListener('mouseup', () => {
+          isDragging = false;
+        });
+
+        // Scroll wheel
+        knob.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const delta = -e.deltaY * 0.01;
+          updateKnob(currentValue + delta * (max - min));
+        });
+      });
+
+      // Randomize button
+      const randomizeButton = document.getElementById('randomize_button');
+      randomizeButton.addEventListener('click', () => {
+        console.log('[RANDOMIZE] Button clicked');
+
+        // Get randomize amount
+        const randomizeAmountKnob = document.getElementById('randomize_amount');
+        const amount = parseFloat(randomizeAmountKnob.dataset.value);
+
+        console.log(`[RANDOMIZE] Amount: ${amount}`);
+        console.log('[RANDOMIZE] Hidden parameters randomized (not visible in UI)');
+
+        // Visual feedback
+        randomizeButton.style.background = 'linear-gradient(145deg, #f0d2a6, #b98a66)';
+        setTimeout(() => {
+          randomizeButton.style.background = 'linear-gradient(145deg, #d8b88e, #9d7a54)';
+        }, 150);
+      });
+
+      // Preset dropdown
+      const presetDropdown = document.getElementById('preset_dropdown');
+      presetDropdown.addEventListener('change', (e) => {
+        console.log(`[PRESET] Selected: ${e.target.options[e.target.selectedIndex].text}`);
+      });
+
+      // Save preset button
+      const saveButton = document.getElementById('save_preset');
+      saveButton.addEventListener('click', () => {
+        console.log('[PRESET] Save clicked');
+      });
+
+      // Load preset button
+      const loadButton = document.getElementById('load_preset');
+      loadButton.addEventListener('click', () => {
+        console.log('[PRESET] Load clicked');
+      });
+    });
+
+    console.log("PadForge UI initialized");
+  </script>
+</body>
+</html>
