@@ -48,17 +48,36 @@ void LushPadAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 {
     currentSampleRate = sampleRate;
 
-    // Prepare DSP spec for filters
-    juce::dsp::ProcessSpec spec;
-    spec.sampleRate = sampleRate;
-    spec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
-    spec.numChannels = 1;  // Mono per-voice filtering
+    // Prepare DSP spec for stereo reverb
+    juce::dsp::ProcessSpec reverbSpec;
+    reverbSpec.sampleRate = sampleRate;
+    reverbSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    reverbSpec.numChannels = 2;  // Stereo
+
+    // Prepare and configure reverb
+    reverb.prepare(reverbSpec);
+    reverb.reset();
+
+    juce::dsp::Reverb::Parameters reverbParams;
+    reverbParams.roomSize = 0.9f;     // Large hall
+    reverbParams.damping = 0.4f;      // Moderate high-frequency rolloff
+    reverbParams.wetLevel = 0.4f;     // Default wet level (overridden by parameter)
+    reverbParams.dryLevel = 0.6f;     // Default dry level (overridden by parameter)
+    reverbParams.width = 1.0f;        // Full stereo width
+    reverbParams.freezeMode = 0.0f;   // No freeze
+    reverb.setParameters(reverbParams);
+
+    // Prepare DSP spec for mono per-voice filtering
+    juce::dsp::ProcessSpec voiceSpec;
+    voiceSpec.sampleRate = sampleRate;
+    voiceSpec.maximumBlockSize = static_cast<juce::uint32>(samplesPerBlock);
+    voiceSpec.numChannels = 1;  // Mono per-voice
 
     // Initialize all voices with filter preparation
     for (auto& voice : voices)
     {
         voice.adsr.setSampleRate(sampleRate);
-        voice.filter.prepare(spec);
+        voice.filter.prepare(voiceSpec);
         voice.reset();
     }
 }
@@ -66,6 +85,69 @@ void LushPadAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock
 void LushPadAudioProcessor::releaseResources()
 {
     // Cleanup will be added in Stage 3 (DSP)
+}
+
+void LushPadAudioProcessor::updateVoiceLFOs(SynthVoice& voice)
+{
+    // Update tertiary LFOs first (indices 6-8) - slowest layer, modulate primary depths
+    for (int i = 0; i < 3; ++i)
+    {
+        int lfoIndex = 6 + i;
+        float phaseIncrement = (voice.lfoBaseFreq[lfoIndex] * juce::MathConstants<float>::twoPi) / static_cast<float>(currentSampleRate);
+        voice.lfoPhase[lfoIndex] += phaseIncrement;
+
+        // Wrap phase
+        if (voice.lfoPhase[lfoIndex] >= juce::MathConstants<float>::twoPi)
+            voice.lfoPhase[lfoIndex] -= juce::MathConstants<float>::twoPi;
+
+        // Generate smooth random value using sine wave
+        float targetValue = std::sin(voice.lfoPhase[lfoIndex]);
+
+        // One-pole low-pass filter for smoothing
+        voice.lfoSmoothed[lfoIndex] += (targetValue - voice.lfoSmoothed[lfoIndex]) * 0.01f;
+    }
+
+    // Update secondary LFOs (indices 3-5) - middle layer, modulate primary speeds
+    for (int i = 0; i < 3; ++i)
+    {
+        int lfoIndex = 3 + i;
+        float phaseIncrement = (voice.lfoBaseFreq[lfoIndex] * juce::MathConstants<float>::twoPi) / static_cast<float>(currentSampleRate);
+        voice.lfoPhase[lfoIndex] += phaseIncrement;
+
+        // Wrap phase
+        if (voice.lfoPhase[lfoIndex] >= juce::MathConstants<float>::twoPi)
+            voice.lfoPhase[lfoIndex] -= juce::MathConstants<float>::twoPi;
+
+        // Generate smooth random value
+        float targetValue = std::sin(voice.lfoPhase[lfoIndex]);
+        voice.lfoSmoothed[lfoIndex] += (targetValue - voice.lfoSmoothed[lfoIndex]) * 0.01f;
+    }
+
+    // Update primary LFOs (indices 0-2) - fastest layer, modulated by secondary and tertiary
+    for (int i = 0; i < 3; ++i)
+    {
+        int lfoIndex = i;
+        int secondaryIndex = 3 + i;  // Secondary LFO that modulates this primary's speed
+        int tertiaryIndex = 6 + i;   // Tertiary LFO that modulates this primary's depth
+
+        // Speed modulation from secondary LFO (±30%)
+        float speedMod = 1.0f + (voice.lfoSmoothed[secondaryIndex] * 0.3f);
+        float modulatedFreq = voice.lfoBaseFreq[lfoIndex] * speedMod;
+
+        float phaseIncrement = (modulatedFreq * juce::MathConstants<float>::twoPi) / static_cast<float>(currentSampleRate);
+        voice.lfoPhase[lfoIndex] += phaseIncrement;
+
+        // Wrap phase
+        if (voice.lfoPhase[lfoIndex] >= juce::MathConstants<float>::twoPi)
+            voice.lfoPhase[lfoIndex] -= juce::MathConstants<float>::twoPi;
+
+        // Depth modulation from tertiary LFO (±40%)
+        float depthMod = 1.0f + (voice.lfoSmoothed[tertiaryIndex] * 0.4f);
+
+        // Generate smooth random value with modulated depth
+        float targetValue = std::sin(voice.lfoPhase[lfoIndex]) * depthMod;
+        voice.lfoSmoothed[lfoIndex] += (targetValue - voice.lfoSmoothed[lfoIndex]) * 0.01f;
+    }
 }
 
 void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midiMessages)
@@ -98,12 +180,7 @@ void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
     // Read parameters (atomic, done once per buffer for efficiency)
     float timbreValue = parameters.getRawParameterValue("timbre")->load();
     float filterCutoffValue = parameters.getRawParameterValue("filter_cutoff")->load();
-
-    // Map timbre to FM feedback depth (0.0-0.4 range for musicality)
-    float feedbackDepth = timbreValue * 0.4f;
-
-    // Map timbre to saturation gain (1.0-3.0 range)
-    float saturationGain = 1.0f + (timbreValue * 2.0f);
+    float reverbAmountValue = parameters.getRawParameterValue("reverb_amount")->load();
 
     // Generate audio per-sample
     const int numSamples = buffer.getNumSamples();
@@ -119,6 +196,28 @@ void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             if (!voice.active)
                 continue;
 
+            // Update nested LFO system
+            updateVoiceLFOs(voice);
+
+            // Get LFO modulation values
+            float panModulation = voice.lfoSmoothed[0];    // LFO1: -1 to +1 (panning)
+            float fmModulation = voice.lfoSmoothed[1];     // LFO2: -1 to +1 (FM depth)
+            float satModulation = voice.lfoSmoothed[2];    // LFO3: -1 to +1 (saturation)
+
+            // Calculate modulated FM feedback depth
+            float baseFeedbackDepth = timbreValue * 0.4f;
+            float modulatedFeedback = baseFeedbackDepth * (1.0f + fmModulation * 0.2f);  // ±20%
+            modulatedFeedback = juce::jlimit(0.0f, 0.4f, modulatedFeedback);
+
+            // Calculate modulated saturation gain
+            float baseSaturationGain = 1.0f + (timbreValue * 2.0f);
+            float modulatedSaturation = baseSaturationGain * (1.0f + satModulation * 0.15f);  // ±15%
+            modulatedSaturation = juce::jlimit(1.0f, 3.0f, modulatedSaturation);
+
+            // Calculate pan position (0.0 = left, 0.5 = center, 1.0 = right)
+            float panValue = 0.5f + (panModulation * 0.3f);  // ±30% from center
+            panValue = juce::jlimit(0.0f, 1.0f, panValue);
+
             // Calculate base frequency for this MIDI note
             // f = 440 * 2^((note - 69) / 12)
             float baseFreq = 440.0f * std::pow(2.0f, (voice.currentNote - 69) / 12.0f);
@@ -130,11 +229,11 @@ void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             float ratio2 = 1.00407f;   // +7 cents
             float ratio3 = 0.99593f;   // -7 cents
 
-            // Generate 3 detuned sine oscillators WITH FM feedback
-            // Formula: sin(phase + feedbackDepth * previousOutput)
-            float osc1 = std::sin(voice.phase1 + feedbackDepth * voice.previousOutput1);
-            float osc2 = std::sin(voice.phase2 + feedbackDepth * voice.previousOutput2);
-            float osc3 = std::sin(voice.phase3 + feedbackDepth * voice.previousOutput3);
+            // Generate 3 detuned sine oscillators WITH modulated FM feedback
+            // Formula: sin(phase + modulatedFeedback * previousOutput)
+            float osc1 = std::sin(voice.phase1 + modulatedFeedback * voice.previousOutput1);
+            float osc2 = std::sin(voice.phase2 + modulatedFeedback * voice.previousOutput2);
+            float osc3 = std::sin(voice.phase3 + modulatedFeedback * voice.previousOutput3);
 
             // Store outputs for next sample's feedback
             voice.previousOutput1 = osc1;
@@ -144,8 +243,8 @@ void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             // Sum oscillators (average to prevent clipping)
             float voiceOutput = (osc1 + osc2 + osc3) / 3.0f;
 
-            // Apply harmonic saturation using tanh waveshaping
-            voiceOutput = std::tanh(saturationGain * voiceOutput);
+            // Apply modulated harmonic saturation using tanh waveshaping
+            voiceOutput = std::tanh(modulatedSaturation * voiceOutput);
 
             // Calculate velocity-scaled filter cutoff
             // Soft notes (low velocity): darker sound (cutoff reduced by 50%)
@@ -170,9 +269,12 @@ void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             float envelope = voice.adsr.getNextSample();
             voiceOutput *= envelope * voice.currentVelocity;
 
-            // Add to stereo mix (centered for now, panning in Phase 3.3)
-            mixL += voiceOutput;
-            mixR += voiceOutput;
+            // Apply LFO-modulated panning
+            float leftGain = 1.0f - panValue;
+            float rightGain = panValue;
+
+            mixL += voiceOutput * leftGain;
+            mixR += voiceOutput * rightGain;
 
             // Update oscillator phases
             float phaseIncrement1 = (baseFreq * ratio1 * juce::MathConstants<float>::twoPi) / static_cast<float>(currentSampleRate);
@@ -205,6 +307,22 @@ void LushPadAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce:
             buffer.setSample(1, sample, mixR * 0.3f);
         }
     }
+
+    // Apply global reverb with reverb_amount parameter controlling wet/dry
+    juce::dsp::AudioBlock<float> block(buffer);
+    juce::dsp::ProcessContextReplacing<float> context(block);
+
+    // Update reverb wet/dry levels based on parameter
+    juce::dsp::Reverb::Parameters reverbParams;
+    reverbParams.roomSize = 0.9f;
+    reverbParams.damping = 0.4f;
+    reverbParams.wetLevel = reverbAmountValue;
+    reverbParams.dryLevel = 1.0f - reverbAmountValue;
+    reverbParams.width = 1.0f;
+    reverbParams.freezeMode = 0.0f;
+    reverb.setParameters(reverbParams);
+
+    reverb.process(context);
 }
 
 juce::AudioProcessorEditor* LushPadAudioProcessor::createEditor()
@@ -273,6 +391,32 @@ void LushPadAudioProcessor::startVoice(SynthVoice& voice, int note, float veloci
     voice.currentVelocity = velocity;
     voice.timestamp = voiceCounter++;
     voice.phase1 = voice.phase2 = voice.phase3 = 0.0f;
+
+    // Initialize random LFO base frequencies for this voice
+    // Primary LFOs (0-2): 0.05-0.2 Hz
+    for (int i = 0; i < 3; ++i)
+    {
+        voice.lfoBaseFreq[i] = 0.05f + random.nextFloat() * (0.2f - 0.05f);
+    }
+
+    // Secondary LFOs (3-5): 0.02-0.1 Hz
+    for (int i = 3; i < 6; ++i)
+    {
+        voice.lfoBaseFreq[i] = 0.02f + random.nextFloat() * (0.1f - 0.02f);
+    }
+
+    // Tertiary LFOs (6-8): 0.01-0.05 Hz
+    for (int i = 6; i < 9; ++i)
+    {
+        voice.lfoBaseFreq[i] = 0.01f + random.nextFloat() * (0.05f - 0.01f);
+    }
+
+    // Reset LFO phases and smoothed values
+    for (int i = 0; i < 9; ++i)
+    {
+        voice.lfoPhase[i] = 0.0f;
+        voice.lfoSmoothed[i] = 0.0f;
+    }
 
     // Fixed ADSR parameters (Phase 3.1: not parameter-controlled yet)
     voice.adsrParams.attack = 0.3f;   // 300ms attack

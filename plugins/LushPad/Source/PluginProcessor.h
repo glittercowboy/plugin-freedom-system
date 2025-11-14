@@ -57,6 +57,16 @@ private:
         // Low-pass filter per voice
         juce::dsp::IIR::Filter<float> filter;
 
+        // Random LFO system (9 per voice)
+        // Indices 0-2: Primary LFOs (panning, FM depth, saturation)
+        // Indices 3-5: Secondary LFOs (modulate primary LFO speeds)
+        // Indices 6-8: Tertiary LFOs (modulate primary LFO depths)
+        float lfoPhase[9] = {0.0f};
+        float lfoSmoothed[9] = {0.0f};
+
+        // Random base frequencies per voice (set on voice start)
+        float lfoBaseFreq[9] = {0.0f};
+
         juce::ADSR adsr;
         juce::ADSR::Parameters adsrParams;
 
@@ -69,6 +79,14 @@ private:
             previousOutput1 = previousOutput2 = previousOutput3 = 0.0f;
             filter.reset();
             adsr.reset();
+
+            // Reset LFOs
+            for (int i = 0; i < 9; ++i)
+            {
+                lfoPhase[i] = 0.0f;
+                lfoSmoothed[i] = 0.0f;
+                lfoBaseFreq[i] = 0.0f;
+            }
         }
     };
 
@@ -78,10 +96,19 @@ private:
     uint64_t voiceCounter = 0;  // Incrementing timestamp for oldest-note-stealing
     double currentSampleRate = 44100.0;
 
+    // Global reverb
+    juce::dsp::Reverb reverb;
+
+    // Random number generator (for LFO frequency randomization)
+    juce::Random random;
+
     // Helper methods for voice allocation
     void allocateVoice(int note, float velocity);
     void releaseVoice(int note);
     void startVoice(SynthVoice& voice, int note, float velocity);
+
+    // LFO update (nested modulation)
+    void updateVoiceLFOs(SynthVoice& voice);
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(LushPadAudioProcessor)
 };
