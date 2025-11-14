@@ -1,15 +1,10 @@
 ---
 name: plugin-testing
-description: Run automated stability tests, pluginval validation, and DAW testing for audio plugins. Invoke when user mentions test, validate, validation, pluginval, stability, automated tests, run tests, check plugin, or quality assurance
+description: Validates audio plugins through automated tests, pluginval, or manual DAW testing. Use when testing completed plugins (Stage 5+), after bug fixes, or when user mentions test, validate, validation, pluginval, stability, automated tests, run tests, check plugin, or quality assurance
 allowed-tools:
   - Read
   - Bash
   - Task # For deep-research on failures
-# preconditions: project-specific extension (not in Agent Skills spec)
-# Used by system hooks to validate skill invocation
-preconditions:
-  - Plugin must exist
-  - Plugin status must NOT be 💡 (must have implementation)
 ---
 
 # plugin-testing Skill
@@ -18,11 +13,7 @@ preconditions:
 
 ## Workflow Overview
 
-This skill provides three test modes:
-
-1. **Automated Testing** (~2 min) - Quick C++ unit tests for stability
-2. **Build + Pluginval** (~5-10 min) - Industry-standard validation (50+ tests) ⭐ **RECOMMENDED**
-3. **Manual DAW Testing** (~30-60 min) - Real-world testing with guided checklist
+Three test modes: (1) Automated (~2 min), (2) Build + Pluginval (~5-10 min) ⭐ RECOMMENDED, (3) Manual DAW (~30-60 min). See decision menu for details.
 
 ## Phase 1: Detect Plugin and Mode Selection
 
@@ -49,8 +40,8 @@ Present mode selection menu (see `assets/decision-menu-templates.md#mode-selecti
 **Track your progress:**
 ```
 Mode 1 Progress:
-- [ ] Step 1: Read test specifications
-- [ ] Step 2: Check for Tests/ directory
+- [ ] Step 1: Check for Tests/ directory
+- [ ] Step 2: Read test specifications
 - [ ] Step 3: Build and execute tests
 - [ ] Step 4: Parse test results
 - [ ] Step 5: Present results and next steps
@@ -59,14 +50,8 @@ Mode 1 Progress:
 <critical_sequence>
 **Execute these steps in exact order:**
 
-<step id="read_spec">
-**Step 1: Read Test Specifications**
-
-Read `references/test-specifications.md` for detailed test implementations before proceeding.
-</step>
-
 <step id="check_tests">
-**Step 2: Check for Tests/ Directory**
+**Step 1: Check for Tests/ Directory**
 
 Verify Tests/ directory exists:
 ```bash
@@ -77,9 +62,15 @@ test -d "plugins/{PLUGIN_NAME}/Tests/"
 1. Inform user that automated tests require test infrastructure
 2. Present decision menu from `assets/decision-menu-templates.md#missing-tests`
 3. WAIT for user selection
-4. **STOP - Do not proceed to Step 3** (user must select Mode 2 or cancel)
+4. **STOP - Do not proceed to Step 2** (user must select Mode 2 or cancel)
 
-If Tests/ directory exists, proceed to Step 3.
+If Tests/ directory exists, proceed to Step 2.
+</step>
+
+<step id="read_spec">
+**Step 2: Read Test Specifications**
+
+Read `references/test-specifications.md` for detailed test implementations before proceeding.
 </step>
 
 <step id="build_tests">
@@ -237,24 +228,30 @@ Present post-test decision menu (see `assets/decision-menu-templates.md#post-tes
    Delegate to `deep-research` skill via Task tool:
 
    ```
-   Task: "Investigate [test_name] failure in [PluginName]
+   Task tool parameters:
+   - task: "Investigate [test_name] failure in [PluginName]
 
-   Context:
-   - Test failed: [specific failure message]
-   - Plugin type: [from creative-brief.md]
-   - Relevant code: [file paths from investigation]
+     Context:
+     - Test failed: [specific failure message]
+     - Plugin type: [from creative-brief.md]
+     - Relevant code: [file paths from investigation]
 
-   Goal: Find root cause and provide specific fix"
+     Goal: Find root cause and provide specific fix"
+   - subagent_type: "research-planning-agent"
    ```
 
-   WAIT for deep-research completion before presenting results to user.
+   After deep-research completes:
+   1. Read deep-research return message completely
+   2. Verify root cause identified (not just symptoms)
+   3. Extract specific fix recommendations
+   4. THEN present findings to user with decision menu
 
    **Never attempt to fix complex issues without delegation to deep-research.**
    </handoff_protocol>
 </sequence>
 </delegation_rule>
 
-## Phase 4: Log Test Results
+## Phase 4: Log Test Results and Checkpoint
 
 <state_requirement>
 **After completing any test mode (1, 2, or 3):**
@@ -268,9 +265,9 @@ Use format from `assets/report-templates.md#test-log-format`
 **Requirement 2: Update .continue-here.md**
 
 Update `.continue-here.md`:
-- Set current_stage: "testing_complete"
+- Set stage: "testing_complete"
 - Set next_step based on test results (Stage 4 if passed, investigation if failed)
-- Record test_date: [timestamp]
+- Record last_tested: [timestamp]
 - Record test_mode: [1/2/3]
 
 **Requirement 3: Update PLUGINS.md**
@@ -280,11 +277,26 @@ Update `PLUGINS.md` for {PLUGIN_NAME}:
 - Record last_tested: [date]
 - Record test_mode_used: [Mode 1/2/3]
 
-**Complete all three requirements before proceeding to decision menu.**
+**Requirement 4: Commit Changes**
+
+Commit test results and state updates:
+```bash
+git add logs/{PLUGIN_NAME}/test_[timestamp].log .continue-here.md PLUGINS.md
+git commit -m "test({PLUGIN_NAME}): {test_mode} validation {RESULT}"
+```
+
+**Requirement 5: Check Workflow Mode**
+
+Read `.claude/preferences.json` to determine workflow mode:
+
+- If express mode with auto_test=true: Auto-progress to installation (skip decision menu)
+- If manual mode OR auto_test=false: Present post-test decision menu (see templates)
+
+**Complete all five requirements before proceeding.**
 
 **Error Handling**: If any requirement fails (file write error, missing plugin entry), report the specific error to the user and abort state update. Do not present the decision menu with incomplete state.
 
-VERIFY both state files updated successfully before presenting next steps.
+VERIFY all state files updated and committed successfully before presenting next steps.
 </state_requirement>
 
 ## Success Criteria
