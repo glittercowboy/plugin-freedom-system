@@ -18,6 +18,9 @@ stage: [0-6] (for plugin-workflow only)
 phase: [phase-number] (for other workflows)
 status: [workflow-specific status]
 last_updated: [ISO 8601 timestamp]
+gui_type: [headless|webview] (optional - for plugin-workflow)
+mode: [express|manual] (optional - workflow execution mode)
+checkpoint_phase: [phase-identifier] (optional - for multi-phase checkpoints)
 ---
 
 # [Workflow Name] - [Stage/Phase] - [Status]
@@ -38,6 +41,12 @@ last_updated: [ISO 8601 timestamp]
 - **stage**: Required for plugin-workflow (values: 0-6)
 - **phase**: Required for ui-mockup, plugin-ideation, etc.
 - **status**: Workflow-specific status (e.g., "in_progress", "paused", "complete")
+
+### Optional Fields
+
+- **gui_type**: Plugin UI type - "headless" (uses DAW controls) or "webview" (custom UI). Defaults to "webview" if not present. Only relevant for plugin-workflow.
+- **mode**: Workflow execution mode - "express" (auto-progress) or "manual" (decision menus). Controls checkpoint behavior.
+- **checkpoint_phase**: Phase identifier for multi-phase checkpoints (e.g., "3.1", "3.2"). Allows resuming within a stage.
 
 ## Examples
 

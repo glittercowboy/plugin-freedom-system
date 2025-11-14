@@ -1,107 +1,84 @@
 # Example Walkthrough: troubleshooting-docs Skill
 
-This example demonstrates the complete 7-step workflow for capturing a solved problem.
-
 ## Scenario
 
-A parameter state management issue was just fixed in ReverbPlugin. The user confirms: "That worked! The parameter is saving correctly now."
+Parameter state management issue fixed in ReverbPlugin. User confirms: "That worked! The parameter is saving correctly now."
 
-## Workflow Execution
+## Key Decision Points
 
-### Step 1: Detect Confirmation
+### Decision 1: Is this worth documenting?
 
-The phrase "That worked!" triggers automatic skill invocation (matches confirmation phrase in Step 1).
+**Context**: DECAY parameter wasn't persisting after DAW reload. Took 3 investigation attempts (checked APVTS creation, verified parameter ID, finally discovered state sync issue).
 
-### Step 2: Gather Context
+**Decision**: YES - document it
+- **Why**: Non-obvious solution (state sync between UI and APVTS)
+- **Trigger**: Multiple investigation attempts needed
+- **Skip if**: Single-attempt fix like typo or syntax error
 
-From conversation history:
-- **Plugin**: ReverbPlugin
-- **Symptom**: DECAY parameter not persisting after DAW reload
-- **Stage**: Post-implementation (Stage 4 complete)
-- **Failed attempts**: Checked APVTS creation, verified parameter ID
-- **Solution**: Added `parameterValueChanged()` to update processor state
-- **Root cause**: State only saved from APVTS, not reflecting UI changes
+### Decision 2: Update existing doc or create new?
 
-### Step 3: Check Existing Docs
+**Context**: Step 3 search found similar issue: `parameter-not-saving-reverb-OtherPlugin-20251105.md`
 
-Search troubleshooting/ for similar parameter issues:
-```bash
-grep -r "parameter not persisting" troubleshooting/
-grep -r "DECAY" troubleshooting/parameter-issues/
+**Decision**: CREATE NEW with cross-reference
+- **Why**: Different root cause (that one was APVTS initialization, this is state sync)
+- **Update existing if**: Exact same root cause, just different plugin
+- **Edge case**: If root cause unclear, ask user which to choose
+
+### Decision 3: Promote to Required Reading?
+
+**Context**: System detects:
+- Severity: `moderate` (not critical)
+- Scope: Single plugin (ReverbPlugin)
+- Complexity: Non-obvious but not foundational
+
+**Decision**: DON'T auto-suggest Required Reading
+- **Suggest if**: Critical severity + affects multiple plugins + foundational stage (1 or 3)
+- **Example that WOULD suggest**: Thread violation affecting all Stage 2 DSP implementations
+- **User can still choose**: Option 2 in decision menu always available
+
+## Edge Cases
+
+### Missing context in conversation
+
+If plugin name, exact error, or solution steps not in conversation:
+1. Ask user for missing details with specific questions
+2. BLOCK (don't proceed to Step 3)
+3. WAIT for response
+
+**Example**:
+```
+I need details to document this:
+1. Plugin name?
+2. Exact error message?
+3. What fixed it?
 ```
 
-Result: No similar issue found → proceed to Step 4
+### YAML validation failure
 
-### Step 4: Generate Filename
-
-Format: `[sanitized-symptom]-[plugin]-[YYYYMMDD].md`
-
-Generated: `parameter-not-saving-decay-ReverbPlugin-20251110.md`
-
-### Step 5: Validate YAML Schema
-
+If first attempt produces:
 ```yaml
----
-plugin: ReverbPlugin
-date: 2025-11-10
-problem_type: state_management
-component: apvts
-symptoms:
-  - "DECAY parameter not persisting after DAW reload"
-  - "Parameter resets to default on plugin instance reload"
-root_cause: state_sync
-juce_version: 8.0.9
-resolution_type: code_fix
-severity: moderate
-tags: [parameters, apvts, state-management, runtime]
----
+problem_type: compilation_error  # ❌ Not valid enum
+severity: high                    # ❌ Should be "critical"/"moderate"/"minor"
 ```
 
-Validation: ✅ All required fields present, enum values valid
+**What happens**:
+1. Load `schema.yaml` to show allowed values
+2. Show specific errors with correct enum options
+3. BLOCK until corrected
+4. Retry validation
 
-### Step 6: Create Documentation
+### Similar issue with ambiguous relationship
 
-Category mapping: `state_management` → `parameter-issues/`
+Search finds 2 matches:
+- `parameter-not-saving-reverb-PluginA.md` (APVTS init issue)
+- `parameter-state-loss-PluginB.md` (state sync issue)
 
-File created: `troubleshooting/parameter-issues/parameter-not-saving-decay-ReverbPlugin-20251110.md`
-
-Uses template from `assets/resolution-template.md` with gathered context.
-
-### Step 7: Cross-Reference & Pattern Detection
-
-- **Cross-reference**: None (no similar issues found in Step 3)
-- **Pattern detection**: Not critical severity, single plugin affected → no Required Reading suggestion
-
-### Decision Menu
-
-```
-✓ Solution documented
-
-File created:
-- troubleshooting/parameter-issues/parameter-not-saving-decay-ReverbPlugin-20251110.md
-
-What's next?
-1. Continue workflow (recommended)
-2. Add to Required Reading - Promote to critical patterns (juce8-critical-patterns.md)
-3. Link related issues - Connect to similar problems
-4. Update common patterns - Add to pattern library
-5. View documentation - See what was captured
-6. Other
-
-Choose (1-6): _
-```
-
-User selects Option 1 → skill returns to calling workflow (plugin-improve in this case)
-
-## Key Takeaways
-
-1. **Auto-invocation**: Confirmation phrases trigger skill automatically
-2. **Blocking requirements**: Plugin name, symptom, stage, and solution are mandatory
-3. **YAML validation**: Schema validation prevents invalid categorization
-4. **Progressive decision**: User decides whether to promote to Required Reading
-5. **Terminal skill**: Returns control to calling skill after documentation
+**Decision**:
+- Show both matches to user
+- Let user decide: new doc, update existing, or cross-reference both
+- WAIT for choice before proceeding
 
 ## See Also
 
-- [SKILL.md](../SKILL.md) - Full skill documentation
-- [references/yaml-schema.md](yaml-schema.md) - Complete schema reference
+- [SKILL.md](../SKILL.md) - Full workflow steps
+- [yaml-schema.md](yaml-schema.md) - Schema reference

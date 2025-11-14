@@ -3,43 +3,43 @@
     "stages": {
       "0": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["architecture.md"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md"],
         "plugins_md_status": "🚧 Stage 0",
         "commit_template": "docs({name}): Complete Stage 0 (Research) - DSP architecture documented"
       },
       "1": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["plan.md"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md", ".ideas/plan.md"],
         "plugins_md_status": "🚧 Stage 1",
         "commit_template": "docs({name}): Complete Stage 1 (Planning) - implementation strategy defined"
       },
       "2": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["CMakeLists.txt", "PluginProcessor.h", "PluginProcessor.cpp"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md", ".ideas/plan.md", "CMakeLists.txt", "PluginProcessor.h", "PluginProcessor.cpp"],
         "plugins_md_status": "🚧 Stage 2",
         "commit_template": "feat({name}): Complete Stage 2 (Foundation) - build system operational"
       },
       "3": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["PluginProcessor.h", "PluginProcessor.cpp"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md", ".ideas/plan.md", "PluginProcessor.h", "PluginProcessor.cpp"],
         "plugins_md_status": "🚧 Stage 3",
         "commit_template": "feat({name}): Complete Stage 3 (DSP Core) - audio processing operational"
       },
       "4": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["PluginProcessor.h", "PluginProcessor.cpp", "PluginEditor.h", "PluginEditor.cpp"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md", ".ideas/plan.md", "PluginProcessor.h", "PluginProcessor.cpp", "PluginEditor.h", "PluginEditor.cpp"],
         "plugins_md_status": "🚧 Stage 4",
         "commit_template": "feat({name}): Complete Stage 4 (Parameters) - APVTS configured"
       },
       "5": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["PluginEditor.h", "PluginEditor.cpp", "ui/public/index.html"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md", ".ideas/plan.md", "PluginEditor.h", "PluginEditor.cpp", "ui/public/index.html"],
         "plugins_md_status": "🚧 Stage 5",
         "commit_template": "feat({name}): Complete Stage 5 (GUI) - UI operational"
       },
       "6": {
         "state_files": [".continue-here.md", "PLUGINS.md"],
-        "required_files": ["test_results.txt"],
+        "required_files": [".ideas/creative-brief.md", ".ideas/parameter-spec.md", ".ideas/architecture.md", ".ideas/plan.md", "test_results.txt"],
         "plugins_md_status": "✅",
         "commit_template": "feat({name}): Complete Stage 6 (Validation) - plugin tested and ready"
       }

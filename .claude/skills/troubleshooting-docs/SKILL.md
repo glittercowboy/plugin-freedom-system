@@ -1,6 +1,6 @@
 ---
 name: troubleshooting-docs
-description: Capture solved problems as categorized documentation with YAML frontmatter for fast lookup
+description: Captures solved problems as categorized documentation with YAML frontmatter for fast lookup. Use when user confirms solution with phrases like 'that worked', 'it's fixed', 'working now', or via /doc-fix command.
 allowed-tools:
   - Read # Parse conversation context
   - Write # Create resolution docs
@@ -19,7 +19,7 @@ preconditions:
 
 This skill captures problem solutions immediately after confirmation, creating structured documentation that serves as a searchable knowledge base for future sessions.
 
-**Organization:** Single-file architecture - each problem documented as one markdown file in its symptom category directory (e.g., `troubleshooting/build-failures/cmake-version-mismatch.md`). Files use YAML frontmatter for metadata and searchability.
+**Organization:** Single-file architecture - each problem documented as one markdown file in its symptom category directory (e.g., `troubleshooting/build-failures/cmake-version-mismatch.md`).
 
 ---
 
@@ -54,48 +54,19 @@ This skill captures problem solutions immediately after confirmation, creating s
 <step number="2" required="true" depends_on="1">
 ### Step 2: Gather Context
 
-Extract from conversation history:
+Extract from conversation: plugin name, symptom (exact error messages), stage (0-6 or post-implementation), solution (code/config changes), investigation attempts, root cause, JUCE version, OS version, file/line references.
 
-**Blocking requirements (must have before Step 3):**
-
-- **Plugin name**: Which plugin had the problem
-- **Symptom**: Observable error/behavior (exact error messages)
-- **Stage**: Development stage (0-6 or post-implementation)
-- **Solution**: What fixed it (code/config changes)
-
-**Additional context (gather if available):**
-
-- **Investigation attempts**: What didn't work and why
-- **Root cause**: Technical explanation of actual problem
-- **Prevention**: How to avoid in future
-- **JUCE version**: Version where issue occurred
-- **OS version**: macOS version
-- **File/line references**: Specific code locations
-
-**BLOCKING REQUIREMENT:** If critical context is missing (plugin name, exact error, stage, or resolution steps), ask user and WAIT for response before proceeding to Step 3:
-
-```
-I need details to document this:
-
-1. Plugin name?
-2. Exact error message/symptom?
-3. Stage (0-6 or post-implementation)?
-
-[Continue after response]
-```
+**BLOCKING REQUIREMENT:** If critical context is missing (plugin name, exact error, stage, or resolution steps), ask user and WAIT for response before proceeding to Step 3.
 </step>
 
 <step number="3" required="false" depends_on="2">
 ### Step 3: Check Existing Docs (Skip if unique first-time issue)
 
-Search troubleshooting/ for similar issues:
+Search target category directory first (based on problem_type), then expand to all categories if no matches:
 
 ```bash
-# Search by error message keywords
-grep -r "exact error phrase" troubleshooting/
-
-# Search by symptom category
-ls troubleshooting/[category]/
+grep -r "exact error phrase" troubleshooting/[category]/
+# If no match, expand: grep -r "exact error phrase" troubleshooting/
 ```
 
 **IF similar issue found:**
@@ -125,15 +96,7 @@ Proceed directly to Step 4 (no user interaction needed).
 
 Format: `[sanitized-symptom]-[plugin]-[YYYYMMDD].md`
 
-**Sanitization rules:**
-
-- Lowercase
-- Replace spaces with hyphens
-- Remove special characters except hyphens
-- Truncate to reasonable length (< 80 chars)
-
 **Examples:**
-
 - `missing-juce-dsp-module-DelayPlugin-20251110.md`
 - `parameter-not-saving-state-ReverbPlugin-20251110.md`
 - `webview-crash-on-resize-TapeAgePlugin-20251110.md`
@@ -147,22 +110,12 @@ Format: `[sanitized-symptom]-[plugin]-[YYYYMMDD].md`
 <validation_gate name="yaml-schema" blocking="true">
 
 **Validate against schema:**
-Load `schema.yaml` and classify the problem against the enum values defined in `references/yaml-schema.md`. Ensure all required fields are present and match allowed values exactly.
+Classify the problem against enum values defined in `references/yaml-schema.md`. Ensure all required fields present and match allowed values exactly.
 
 **BLOCK if validation fails:**
+Load `schema.yaml` to show specific allowed enum values. Present errors and WAIT for corrected values.
 
-```
-❌ YAML validation failed
-
-Errors:
-- problem_type: must be one of schema enums, got "compilation_error"
-- severity: must be one of [critical, moderate, minor], got "high"
-- symptoms: must be array with 1-5 items, got string
-
-Please provide corrected values.
-```
-
-**GATE ENFORCEMENT:** Do NOT proceed to Step 6 (Create Documentation) until YAML frontmatter passes all validation rules defined in `schema.yaml`.
+**GATE ENFORCEMENT:** Do NOT proceed to Step 6 until YAML frontmatter passes all validation rules.
 
 </validation_gate>
 </step>
@@ -170,23 +123,9 @@ Please provide corrected values.
 <step number="6" required="true" depends_on="5">
 ### Step 6: Create Documentation
 
-**Determine category from problem_type:**
+Category mapping from problem_type: See [references/yaml-schema.md](references/yaml-schema.md) for problem_type to directory mapping.
 
-| problem_type | Directory |
-|--------------|-----------|
-| build_error | build-failures/ |
-| runtime_error | runtime-issues/ |
-| ui_layout | gui-issues/ |
-| api_misuse | api-usage/ |
-| dsp_issue | dsp-issues/ |
-| state_management | parameter-issues/ |
-| performance | runtime-issues/ |
-| thread_violation | runtime-issues/ |
-| validation_failure | validation-problems/ |
-
-Full schema details: `references/yaml-schema.md`
-
-**Create documentation file:**
+Read `assets/resolution-template.md` and populate with Step 2 context in a single operation:
 
 ```bash
 PROBLEM_TYPE="[from validated YAML]"
@@ -194,18 +133,9 @@ CATEGORY="[mapped from problem_type]"
 FILENAME="[generated-filename].md"
 DOC_PATH="troubleshooting/${CATEGORY}/${FILENAME}"
 
-# Create directory if needed
 mkdir -p "troubleshooting/${CATEGORY}"
-
-# Write documentation using template from assets/resolution-template.md
-# (Content populated with Step 2 context and validated YAML frontmatter)
+# Write documentation with Step 2 context + validated YAML frontmatter
 ```
-
-**Result:**
-- Single file in category directory
-- Enum validation ensures consistent categorization
-
-**Create documentation:** Populate the structure from `assets/resolution-template.md` with context gathered in Step 2 and validated YAML frontmatter from Step 5.
 </step>
 
 <step number="7" required="conditional" depends_on="6">
@@ -375,48 +305,6 @@ Documentation is successful when ALL of the following are true:
 
 ---
 
-## Error Handling
-
-**Missing context:**
-
-- Ask user for missing details
-- Don't proceed until critical info provided
-
-**YAML validation failure:**
-
-- Show specific errors
-- Present retry with corrected values
-- BLOCK until valid
-
-**Similar issue ambiguity:**
-
-- Present multiple matches
-- Let user choose: new doc, update existing, or link as duplicate
-
-**Plugin not in PLUGINS.md:**
-
-- Warn but don't block
-- Proceed with documentation
-- Suggest: "Add [Plugin] to PLUGINS.md if not there"
-
----
-
-## Execution Guidelines
-
-**MUST do:**
-- Validate YAML frontmatter (BLOCK if invalid per Step 5 validation gate)
-- Extract exact error messages from conversation
-- Include code examples in solution section
-- Create directories before writing files (`mkdir -p`)
-- Ask user and WAIT if critical context missing
-
-**MUST NOT do:**
-- Skip YAML validation (validation gate is blocking)
-- Use vague descriptions (not searchable)
-- Omit code examples or cross-references
-
----
-
 ## Example Walkthrough
 
-See [references/example-walkthrough.md](references/example-walkthrough.md) for a complete demonstration of the 7-step workflow.
+See [references/example-walkthrough.md](references/example-walkthrough.md) for decision points and edge cases.
