@@ -2,7 +2,7 @@
 set -e
 
 PLUGIN_NAME="$1"
-VERSION="$2"
+VERSION="${2#v}"  # Strip leading "v" if present
 BACKUP_PATH="backups/${PLUGIN_NAME}/v${VERSION}"
 
 # Color codes
