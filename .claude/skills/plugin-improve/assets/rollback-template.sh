@@ -2,7 +2,7 @@
 # Rollback plugin to previous version from backup
 
 PLUGIN_NAME="$1"
-ROLLBACK_VERSION="$2"
+ROLLBACK_VERSION="${2#v}"  # Strip leading "v" if present
 
 BACKUP_PATH="backups/${PLUGIN_NAME}/v${ROLLBACK_VERSION}/"
 

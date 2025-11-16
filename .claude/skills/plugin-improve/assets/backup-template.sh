@@ -2,7 +2,7 @@
 # Backup plugin source to timestamped directory (excludes build artifacts)
 
 PLUGIN_NAME="$1"
-CURRENT_VERSION="$2"
+CURRENT_VERSION="${2#v}"  # Strip leading "v" if present
 
 mkdir -p "backups/${PLUGIN_NAME}/v${CURRENT_VERSION}/"
 
