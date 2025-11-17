@@ -10,7 +10,7 @@
 
 ## Vision
 
-Spyder 2000 is a sophisticated guitar overdrive/distortion plugin that pays tribute to the legendary Line 6 POD and Spider amp series, both in its sonic character and visual design. At its core is a hyperbolic tangent (tanh) waveshaping algorithm inspired by the famous Line 6 distortion character—an industry-standard approach used in professional plugins like FabFilter Saturn and Soundtoys Decapitator that provides smooth, tube-like saturation.
+Spyder 2000 is a sophisticated guitar overdrive/distortion plugin that pays tribute to the legendary Line 6 POD and Spider amp series, both in its sonic character and visual design. At its core is the **authentic Line 6 Patent U.S. Patent 5,789,689 (Figure 14) waveshaping algorithm**—the actual nonlinear transfer function used in POD and Spider amps. This piecewise formula with three distinct regions (sharp asymmetric clipping, quadratic soft saturation, and hard clip) provides the exact harmonic distortion character that defined Line 6's legendary guitar tones.
 
 What makes Spyder 2000 unique is its adaptive pre-clipping filter system. Using parallel shelving and peak filters with exponential gain-dependent crossfading, the plugin emphasizes different frequency regions based on the Gain setting: low gain settings boost a treble shelf @ 2000Hz (+6dB max) for clarity and sparkle (perfect for pushing an already dirty amp), while high gain settings shift to a midrange peak @ 800Hz (+9dB max) for focused, aggressive distortion (ideal for classic rock and blues into clean amplifiers).
 
@@ -85,12 +85,17 @@ Output (Stereo)
 Research conducted on 4 professional plugins (FabFilter Saturn 2, Soundtoys Decapitator, iZotope Trash 2, Line 6 POD Farm) and industry DSP literature. Architecture validated as implementable in JUCE 8 using `juce_dsp` module.
 
 **Nonlinear Waveshaping:**
-- **Algorithm:** Hyperbolic tangent (tanh) soft clipping
-- **Rationale:** Line 6 patent US6350943 formula unavailable during research; tanh provides industry-standard tube-like saturation used in professional plugins
+- **Algorithm:** **Authentic Line 6 Patent U.S. Patent 5,789,689 (Figure 14)** piecewise waveshaping
+- **UPDATE:** Actual Line 6 patent formula obtained post-Stage 0 - provides exact POD/Spider character
+- **Piecewise regions:**
+  1. Region 1 (input < -0.08905): Sharp asymmetric clipping with 12th-power polynomial
+  2. Region 2 (-0.08905 to 0.320018): Quadratic soft saturation
+  3. Region 3 (input >= 0.320018): Hard clip at 0.630035
 - **Drive mapping:** gain parameter (0-10) → 3-40dB → linear gain 1.41x to 100x
-- **Formula:** `output = tanh(driveGain * input)` where `driveGain = pow(10.0, (3.0 + gainValue * 3.7) / 20.0)`
-- **Clipping behavior:** Asymptotically approaches ±1 (soft saturation, no hard clipping)
-- **JUCE implementation:** `std::tanh()` from `<cmath>` or `juce::dsp::WaveShaper<float>`
+- **Formula:** `driveGain = pow(10.0, (3.0 + gainValue * 3.7) / 20.0)`
+- **Characteristics:** Asymmetric saturation creates even harmonics (signature Line 6 sound)
+- **JUCE implementation:** `juce::dsp::WaveShaper<float>` with custom Line 6 transfer function
+- **Fallback:** Tanh waveshaping if CPU profiling shows patent formula too expensive (unlikely)
 
 **Oversampling:**
 - **Factor:** 8x oversampling (default, recommended for heavy distortion per research)
@@ -143,7 +148,7 @@ Research conducted on 4 professional plugins (FabFilter Saturn 2, Soundtoys Deca
 - **Assumes nonlinear section clips at ±1** (output level provides makeup only, no boost above unity)
 
 **Architecture Decisions:**
-- **Tanh over Line 6 patent:** Patent formula unavailable; tanh is proven industry standard (FabFilter, Soundtoys use it)
+- **Authentic Line 6 patent formula:** **UPDATE** - U.S. Patent 5,789,689 (Figure 14) obtained post-Stage 0, provides exact POD/Spider character (not approximation). Tanh retained as CPU fallback only.
 - **8x oversampling:** Required for high gain (>30dB drive) per DSP research; 4x insufficient for aliasing reduction
 - **Parallel filter topology:** Allows independent tuning of treble shelf and midrange peak; more intuitive than coefficient-morphing
 - **Two-shelf tilt filter:** Standard implementation (Quad 34 preamp, modern mastering plugins); simpler than allpass-based approach
