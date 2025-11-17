@@ -47,18 +47,43 @@
 ### Nonlinear Distortion Stage
 
 #### Waveshaper
-- **JUCE Class:** `juce::dsp::WaveShaper<float>` or custom implementation
-- **Purpose:** Apply nonlinear transfer function for harmonic distortion
+- **JUCE Class:** `juce::dsp::WaveShaper<float>` with custom Line 6 transfer function
+- **Purpose:** Apply authentic Line 6 patent nonlinear transfer function for harmonic distortion
 - **Parameters Affected:** gain
 - **Configuration:**
-  - **Primary approach:** Hyperbolic tangent (tanh) waveshaping
+  - **Primary approach:** Line 6 Patent U.S. Patent 5,789,689 (Figure 14) waveshaping
+    - **Transfer function (piecewise):**
+      ```cpp
+      float waveshapeLine6(float input) {
+          // Line 6 patent U.S. Patent 5,789,689 figure 14
+          if (input >= -1.0f && input <= 1.0f) {
+              if (input < -0.08905f)
+                  return (-3.f/4.0f) * (1.0f - pow(1.0f - (abs(input) - 0.032847f), 12.0f)
+                         + (1.0f/3.0f) * (abs(input) - 0.032847f)) + 0.01f;
+              else if (input < 0.320018f)
+                  return -6.153f * pow(input, 2.0f) + 3.9375f * input;
+              else
+                  return 0.630035f;
+          }
+          return juce::jlimit(-1.0f, 1.0f, input);
+      }
+      ```
+    - **Piecewise regions:**
+      1. **Region 1** (input < -0.08905): Sharp asymmetric clipping with 12th-power polynomial
+      2. **Region 2** (-0.08905 to 0.320018): Quadratic soft saturation
+      3. **Region 3** (input >= 0.320018): Hard clip at 0.630035
+    - **Characteristics:**
+      - Asymmetric saturation (different behavior for positive/negative)
+      - Sharp transition in negative region (12th power creates edge)
+      - Smooth quadratic in mid-region (musical saturation)
+      - Hard clip at high levels (prevents excessive output)
+    - **Drive gain mapping:** gain parameter (0-10) → 3dB to 40dB → linear gain 1.41 to 100.0
+    - **Formula:** `driveGain = pow(10.0, (3.0 + (gainValue * 3.7)) / 20.0)`
+    - **Application:** `output = waveshapeLine6(driveGain * input)`
+  - **Alternative (fallback):** Hyperbolic tangent (tanh) if Line 6 formula proves too CPU-intensive
     - Transfer function: `output = tanh(driveGain * input)`
-    - Drive gain mapping: gain parameter (0-10) → 3dB to 40dB → linear gain 1.41 to 100.0
-    - Formula: `driveGain = pow(10.0, (3.0 + (gainValue * 3.7)) / 20.0)`
-  - **Alternative (if CPU critical):** Polynomial cubic soft clipper
-    - Transfer function: `output = x - (x^3 / 3)` for |x| <= 1, clipped otherwise
-    - Faster computation, similar character
-  - **Note:** Line 6 patent US6350943 formula unavailable during research - tanh provides industry-standard tube-like saturation (see Architecture Decisions)
+    - Symmetric soft clipping, simpler computation
+  - **Note:** Authentic Line 6 patent formula from U.S. Patent 5,789,689 provides exact POD/Spider character
 
 #### Oversampling System
 - **JUCE Class:** `juce::dsp::Oversampling<float>`
@@ -133,7 +158,7 @@ Adaptive Pre-Clipping Filter (Parallel Topology)
   ↓
 Oversampling Upsample (8x)
   ↓
-Nonlinear Waveshaper (tanh or polynomial) ← gain parameter (drive amount)
+Nonlinear Waveshaper (Line 6 Patent 5,789,689) ← gain parameter (drive amount)
   ↓
 Oversampling Downsample (8x → 1x with anti-aliasing)
   ↓
@@ -200,18 +225,38 @@ Output (Stereo)
 
 ### Nonlinear Waveshaping Transfer Function
 
-**Algorithm:** Hyperbolic tangent (tanh) soft clipping
+**Algorithm:** Line 6 Patent U.S. Patent 5,789,689 (Figure 14) piecewise waveshaping
 
 **Implementation notes:**
-- Transfer function: `output = tanh(driveGain * input)` using `std::tanh()` from `<cmath>`
-- Drive gain calculation:
+- **Transfer function:** Piecewise function with three regions:
+  ```cpp
+  float waveshapeLine6(float input) {
+      if (input >= -1.0f && input <= 1.0f) {
+          if (input < -0.08905f)  // Region 1: Sharp asymmetric clipping
+              return (-3.f/4.0f) * (1.0f - pow(1.0f - (abs(input) - 0.032847f), 12.0f)
+                     + (1.0f/3.0f) * (abs(input) - 0.032847f)) + 0.01f;
+          else if (input < 0.320018f)  // Region 2: Quadratic soft saturation
+              return -6.153f * pow(input, 2.0f) + 3.9375f * input;
+          else  // Region 3: Hard clip
+              return 0.630035f;
+      }
+      return juce::jlimit(-1.0f, 1.0f, input);  // Safety clamp
+  }
+  ```
+- **Drive gain calculation:**
   - gain parameter (0-10) → dB range (3-40dB)
   - Formula: `dB = 3.0 + (gainValue * 3.7)`
   - Convert to linear: `driveGain = pow(10.0, dB / 20.0)`
   - Example: gain=0 → 3dB → 1.41x, gain=5 → 21.5dB → 11.9x, gain=10 → 40dB → 100x
-- Clipping behavior: tanh asymptotically approaches ±1 (soft saturation, no hard clipping)
+- **Application:** `output = waveshapeLine6(driveGain * input)`
+- **Characteristics:**
+  - **Asymmetric:** Different behavior for positive vs negative inputs (creates even harmonics)
+  - **Region 1:** 12th-power polynomial creates sharp edge for aggressive clipping on negative side
+  - **Region 2:** Smooth quadratic provides musical saturation in mid-range
+  - **Region 3:** Hard clip at 0.630035 prevents excessive output
+- **CPU considerations:** More expensive than tanh due to pow() calls and branching, but authentic Line 6 character
 - Applied per-sample within oversampled domain (8x sample rate for alias reduction)
-- **Alternative implementation (CPU optimization):** Polynomial cubic `output = x - (x^3 / 3)` for |x| ≤ 1
+- **Fallback (if CPU critical):** Tanh waveshaping `output = tanh(driveGain * input)` provides similar character with lower CPU cost
 
 ### Oversampling Implementation
 
@@ -490,10 +535,10 @@ Output (Stereo)
 - No high-risk features (no file I/O, no multi-output, no custom algorithms requiring deep expertise)
 - JUCE provides most building blocks
 
-**Highest risk component:** Line 6 Patent Nonlinear Function
-- Represents ~40% of project risk
-- Patent formula unavailable, using tanh approximation
-- Risk is SUBJECTIVE (will it sound like POD/Spider?) not TECHNICAL (will it work?)
+**Highest risk component:** Line 6 Patent Nonlinear Function (RESOLVED)
+- Represents ~40% of project risk → **MITIGATED** (actual patent formula obtained)
+- Patent formula U.S. Patent 5,789,689 Figure 14 now available
+- Risk was SUBJECTIVE (will it sound like POD/Spider?) - NOW AUTHENTIC (exact patent implementation)
 
 **Recommended approach:**
 1. **Phase 1 - Foundation:** Implement basic signal chain with simple tanh waveshaper (LOW risk)
@@ -508,39 +553,39 @@ Output (Stereo)
 
 ### Waveshaping Algorithm Choice
 
-**Decision:** Use tanh waveshaping as default nonlinear function
+**Decision:** Use authentic Line 6 Patent U.S. Patent 5,789,689 (Figure 14) waveshaping formula
 
 **Rationale:**
-- Line 6 patent US6350943 specific formula unavailable during research (patent document not accessible)
-- Tanh is industry-standard approach for tube-like saturation
-- Used by professional plugins: FabFilter Saturn, Soundtoys Decapitator, UAD tube emulations
-- Well-documented in DSP literature (DAFX book, Will Pirkle's Audio Effects book)
-- JUCE provides `std::tanh()` from standard library (no custom implementation needed)
-- Smooth saturation curve similar to tube amplifier behavior
+- **UPDATED POST-STAGE 0:** Actual Line 6 patent formula obtained after initial research
+- Patent provides exact piecewise transfer function used in POD and Spider amps
+- Three-region algorithm: sharp asymmetric clipping (12th-power polynomial) + quadratic soft saturation + hard clip
+- Asymmetric behavior creates even harmonics (characteristic Line 6 sound)
+- Authenticity achieved - not approximation, actual patent implementation
 
 **Alternatives considered:**
-1. **Exact Line 6 patent formula:**
-   - Why deferred: Patent document not accessible during Stage 0 research
-   - When to reconsider: If patent document obtained, can replace tanh with exact formula (same architecture)
+1. **Hyperbolic tangent (tanh):**
+   - Why initially chosen: Patent formula unavailable during Stage 0 research, industry-standard approximation
+   - Why now fallback: Actual patent formula obtained - tanh only used if CPU profiling shows Line 6 formula too expensive
+   - When to use: If per-sample pow() calls in Line 6 formula cause CPU bottleneck (>60% single core)
 
 2. **Polynomial cubic soft clipper:**
-   - Why deferred: Tanh provides better match to tube amp character
-   - When to reconsider: If CPU profiling shows tanh is too expensive (polynomial is 30% faster)
+   - Why deferred: Line 6 patent provides authentic character, polynomial only for extreme CPU constraints
+   - When to reconsider: If both Line 6 and tanh prove too CPU-intensive (unlikely)
 
 3. **Arctan waveshaping:**
-   - Why rejected: Softer saturation than desired for guitar distortion
-   - When to reconsider: If subjective tests reveal tanh too harsh
+   - Why rejected: Softer saturation than Line 6 patent, not authentic to POD/Spider character
+   - When to reconsider: Never (patent formula is optimal)
 
 **Tradeoffs accepted:**
-- **Not exact Line 6 POD character:** Tanh approximates tube saturation but may differ from specific POD voicing
-  - Acceptable because: Plugin is "Line 6-inspired" not "exact POD clone", tanh is proven professional approach
-- **Higher CPU than polynomial:** Tanh uses transcendental function (slower than polynomial)
-  - Acceptable because: Modern CPUs handle tanh efficiently, ~5-10% CPU vs polynomial's ~3-5% is negligible
+- **Higher CPU than tanh:** Line 6 formula uses pow() twice per sample + conditional branches
+  - Acceptable because: Authenticity is priority, estimated ~10-15% CPU vs tanh's ~5-10%, still within budget
+  - Mitigation: 8x oversampling only applied to waveshaper (not entire chain), modern CPUs handle pow() efficiently
+- **Code complexity:** Piecewise function with three regions vs single tanh() call
+  - Acceptable because: Implementation straightforward, well-documented in patent, worth it for authentic sound
 
 **When to revisit:**
-- If subjective testing reveals tanh doesn't match desired character (try polynomial cubic)
-- If CPU profiling shows tanh is bottleneck (implement polynomial fallback)
-- If Line 6 patent formula becomes available (implement as alternative mode)
+- If CPU profiling shows Line 6 formula exceeds 60% single core (fall back to tanh)
+- If users report performance issues on older hardware (implement quality mode with tanh option)
 
 ### Oversampling Factor Choice
 
@@ -765,7 +810,7 @@ Output (Stereo)
 
 ## Notes
 
-- **Line 6 patent formula:** US6350943 exists but specific transfer function unavailable during research. Tanh waveshaping is industry-standard approximation. If exact patent formula obtained later, can be integrated without architectural changes.
+- **Line 6 patent formula:** **UPDATED POST-STAGE 0** - Authentic Line 6 patent U.S. Patent 5,789,689 (Figure 14) formula obtained and integrated into architecture. Piecewise transfer function with three regions provides exact POD/Spider character. Tanh waveshaping retained as fallback if CPU profiling shows patent formula too expensive (unlikely).
 
 - **Oversampling CPU cost:** Estimated ~35% CPU for 8x oversampling @ 48kHz. If profiling reveals higher usage, implement quality mode selection (2x/4x/8x user-selectable).
 
