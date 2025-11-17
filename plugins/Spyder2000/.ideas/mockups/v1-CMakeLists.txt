@@ -1,0 +1,63 @@
+# Spyder2000 - WebView UI Integration Configuration
+# Generated from v1 UI mockup finalization
+#
+# USAGE: Append this to the main CMakeLists.txt during Stage 3 (GUI)
+# This configures WebView resources and dependencies for JUCE WebBrowserComponent
+
+#==============================================================================
+# WebView UI Resources
+#==============================================================================
+# Bundle HTML/CSS/JS files into binary for embedding in plugin
+# BinaryData converts paths to C++ identifiers:
+#   - index.html → BinaryData::index_html
+#   - js/juce/index.js → BinaryData::index_js
+#   - js/juce/check_native_interop.js → BinaryData::check_native_interop_js
+
+juce_add_binary_data(Spyder2000_UIResources
+    SOURCES
+        Source/ui/public/index.html
+        Source/ui/public/js/juce/index.js
+        Source/ui/public/js/juce/check_native_interop.js
+        # Add any additional CSS, images, fonts here
+)
+
+#==============================================================================
+# Link Libraries
+#==============================================================================
+# CRITICAL: Order matters - UIResources must come BEFORE JUCE modules
+
+target_link_libraries(Spyder2000
+    PRIVATE
+        Spyder2000_UIResources  # UI resources (must be linked first)
+        juce::juce_gui_extra    # REQUIRED for WebBrowserComponent (pattern #3)
+        juce::juce_audio_processors
+        juce::juce_dsp
+        # Add other JUCE modules as needed
+)
+
+#==============================================================================
+# WebView Configuration
+#==============================================================================
+# Enable WebView and disable unnecessary network features
+
+target_compile_definitions(Spyder2000
+    PUBLIC
+        JUCE_WEB_BROWSER=1       # Enable WebBrowserComponent (REQUIRED)
+        JUCE_USE_CURL=0          # Disable CURL (not needed for local resources)
+        JUCE_VST3_CAN_REPLACE_VST2=0
+        # Add other compile definitions as needed
+)
+
+#==============================================================================
+# NOTES FOR STAGE 3 INTEGRATION
+#==============================================================================
+# 1. Copy v1-ui.html to Source/ui/public/index.html
+# 2. Copy JUCE frontend library to Source/ui/public/js/juce/index.js
+# 3. Copy check_native_interop.js to Source/ui/public/js/juce/check_native_interop.js
+# 4. Replace PluginEditor.h with v1-PluginEditor.h content
+# 5. Replace PluginEditor.cpp with v1-PluginEditor.cpp content
+# 6. Append this file to main CMakeLists.txt (after juce_add_plugin)
+# 7. Verify NEEDS_WEB_BROWSER TRUE in juce_add_plugin (pattern #9)
+# 8. Build, install to system folders, clear DAW caches (pattern #10)
+#
+# See v1-integration-checklist.md for complete steps
