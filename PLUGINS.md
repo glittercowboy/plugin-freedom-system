@@ -40,7 +40,7 @@
 | LushPad | 📦 Installed | 1.0.0 | Synth (Instrument) | 2025-11-13 |
 | Words | 💡 Ideated | - | Utility (MIDI Sequencer) | 2025-11-13 |
 | PadForge | 💡 Ideated | - | Synth (Instrument) | 2025-11-14 |
-| Spyder2000 | 💡 Ideated | - | Audio Effect (Guitar Overdrive/Distortion) | 2025-11-17 |
+| Spyder2000 | 💡 Ideated (Draft Params) | - | Audio Effect (Guitar Overdrive/Distortion) | 2025-11-17 |
 
 **For detailed plugin information (lifecycle timeline, known issues, parameters, etc.), see:**
 `plugins/[PluginName]/NOTES.md`
