@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spyder2000 UI Mockup v6 - FIXED Stationary Shine + Glossy Finish</title>
+
+  <style>
+    /* Load authentic 7-segment display font from CDN */
+    @import url('https://cdn.jsdelivr.net/npm/dseg@latest/css/dseg.min.css');
+
+    /* CRITICAL: WebView constraints - NO viewport units */
+    html, body {
+      height: 100%;  /* REQUIRED - replaces viewport units */
+      margin: 0;
+      padding: 0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      /* Native application feel */
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      cursor: default;
+      overflow: hidden;
+
+      /* Centering for preview */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Fixed-size preview frame with 5px rounded corners */
+    .plugin-frame {
+      width: 450px;
+      height: 300px;
+      border: 2px solid #444;
+      border-radius: 5px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Plugin UI container - GLOSSY Ferrari Red chassis (v6 enhanced) */
+    .container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border-radius: 5px;
+      overflow: hidden;
+
+      /* v6: GLOSSY polished Ferrari Red chassis - smooth gradient, NO midline */
+      background:
+        /* Primary glossy highlight (top-left) */
+        radial-gradient(ellipse at 25% 20%,
+          rgba(255, 255, 255, 0.4) 0%,
+          rgba(255, 255, 255, 0.15) 30%,
+          transparent 60%
+        ),
+        /* Secondary specular highlight (diffuse) */
+        linear-gradient(to bottom,
+          rgba(255, 255, 255, 0.3) 0%,
+          transparent 15%,
+          transparent 70%,
+          rgba(0, 0, 0, 0.2) 100%
+        ),
+        /* Base Ferrari Red */
+        radial-gradient(
+          ellipse at 50% 33%,
+          #FF1744 0%,
+          #DC143C 50%,
+          #8B0000 100%
+        );
+
+      /* v6: Enhanced gloss via box-shadow - Hammond 1590BB beveled edges */
+      box-shadow:
+        /* Top highlight (glossy finish) */
+        inset 0 2px 8px rgba(255, 255, 255, 0.5),
+        /* Beveled edges (multi-layer) */
+        inset 8px 8px 12px rgba(255, 107, 107, 0.4),
+        inset -8px -8px 12px rgba(90, 0, 0, 0.6),
+        inset 4px 4px 8px rgba(255, 107, 107, 0.25),
+        inset -4px -4px 8px rgba(90, 0, 0, 0.4),
+        inset 2px 2px 4px rgba(255, 107, 107, 0.15),
+        inset -2px -2px 4px rgba(90, 0, 0, 0.3),
+        /* Bottom shadow (depth) */
+        inset 0 -2px 6px rgba(0, 0, 0, 0.3),
+        /* Outer shadow (3D lift) */
+        0 4px 16px rgba(0, 0, 0, 0.7),
+        /* Outer glow (polished effect) */
+        0 8px 24px rgba(220, 20, 60, 0.3);
+    }
+
+    /* Additional bevel detail using pseudo-elements */
+    .container::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 107, 107, 0.5) 0%,
+        rgba(255, 107, 107, 0.2) 50%,
+        transparent 100%
+      );
+      border-radius: 5px 5px 0 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 8px;
+      background: linear-gradient(
+        to top,
+        rgba(90, 0, 0, 0.6) 0%,
+        rgba(90, 0, 0, 0.3) 50%,
+        transparent 100%
+      );
+      border-radius: 0 0 5px 5px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* v6: Enhanced gloss overlay for polished chassis */
+    .gloss-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background:
+        /* Primary specular highlight */
+        radial-gradient(
+          circle at 25% 25%,
+          rgba(255, 255, 255, 0.45) 0%,
+          rgba(255, 255, 255, 0.22) 20%,
+          rgba(255, 255, 255, 0.08) 40%,
+          transparent 60%
+        ),
+        /* Secondary diffuse highlight */
+        linear-gradient(
+          to bottom,
+          rgba(255, 255, 255, 0.28) 0%,
+          rgba(255, 255, 255, 0.12) 50%,
+          rgba(255, 255, 255, 0) 100%
+        );
+      pointer-events: none;
+      border-radius: 5px 5px 0 0;
+      z-index: 2;
+    }
+
+    /* Plugin name - FLAT silkscreen (NO text-shadow) */
+    .plugin-name {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Arial Black', sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffffff;
+      /* NO text-shadow - flat silkscreen appearance */
+      letter-spacing: 3px;
+      z-index: 3;
+    }
+
+    /* Knob container - holds label and knob */
+    .knob-container {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      z-index: 3;
+    }
+
+    /* CRITICAL v6: Knob wrapper - holds THREE sibling elements */
+    .knob {
+      width: 95px;
+      height: 95px;
+      position: relative;
+      cursor: pointer;
+    }
+
+    /* v6: Davies 1510 Knob base - ROTATES (black glossy cylinder) */
+    .knob-base {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      border-radius: 50%;
+      z-index: 1;
+
+      /* v6: GLOSSY black Davies 1510 finish */
+      background: radial-gradient(
+        circle at 30% 25%,
+        #404040 0%,    /* Lighter gray at specular highlight */
+        #2a2a2a 20%,   /* Mid tone */
+        #1a1a1a 40%,   /* Darker gray */
+        #0a0a0a 70%,   /* Nearly black */
+        #000000 100%   /* Deep black */
+      );
+
+      /* v6: Deep 3D shadows for glossy cylinder */
+      box-shadow:
+        /* Depth shadow (outer) */
+        0 6px 12px rgba(0, 0, 0, 0.6),
+        /* Top highlight (glossy finish) */
+        inset 0 4px 8px rgba(255, 255, 255, 0.3),
+        /* Bottom shadow (cylindrical depth) */
+        inset 0 -3px 6px rgba(0, 0, 0, 0.5),
+        /* Left highlight (curved surface) */
+        inset 3px 0 6px rgba(255, 255, 255, 0.15),
+        /* Right shadow (curved surface) */
+        inset -3px 0 6px rgba(0, 0, 0, 0.4);
+    }
+
+    /* v6: Davies 1510 cylindrical texture - ROTATES with base */
+    .knob-texture {
+      position: absolute;
+      width: 70%;
+      height: 70%;
+      top: 15%;
+      left: 15%;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        from 0deg,
+        #0a0a0a 0deg 1.5deg,
+        #1a1a1a 1.5deg 3deg
+      );
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* v6: White marker line - ROTATES with base */
+    .knob-marker {
+      position: absolute;
+      width: 3px;
+      height: 32px;
+      background: #ffffff;
+      top: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 2px;
+      box-shadow:
+        0 0 4px rgba(255, 255, 255, 0.8),
+        0 3px 6px rgba(0, 0, 0, 0.6);
+      z-index: 2;
+    }
+
+    /* CRITICAL v6: Stationary knob shine - DOES NOT ROTATE */
+    .knob-shine {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      pointer-events: none;  /* CRITICAL: Don't block mouse events */
+      z-index: 3;  /* Above rotating elements */
+
+      /* v6: STRONG glossy highlight - STAYS FIXED */
+      background: radial-gradient(
+        ellipse at 30% 25%,
+        rgba(255, 255, 255, 0.9) 0%,
+        rgba(255, 255, 255, 0.6) 15%,
+        rgba(255, 255, 255, 0.4) 25%,
+        rgba(255, 255, 255, 0.15) 40%,
+        transparent 50%
+      );
+
+      /* CRITICAL: NO transform property - never rotates */
+      /* CRITICAL: NOT a child of rotating element - sibling structure */
+    }
+
+    /* Add rotation to specific elements via class */
+    .rotating {
+      transform-origin: center center;
+      transition: transform 50ms;
+      /* JavaScript applies transform: rotate(Xdeg) to this class */
+    }
+
+    /* Knob label - FLAT silkscreen (NO text-shadow) */
+    .knob-label {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+      /* NO text-shadow - flat silkscreen appearance */
+      letter-spacing: 1px;
+    }
+
+    /* Authentic 7-segment display with DSEG7 font */
+    .seven-segment-display {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'DSEG7 Classic', monospace;
+      font-size: 32px;
+      font-weight: bold;
+      color: #FF6600;
+      /* LED glow effect retained (shadows appropriate for glowing LEDs) */
+      text-shadow:
+        0 0 8px rgba(255, 102, 0, 0.8),
+        0 0 16px rgba(255, 102, 0, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.6);
+      letter-spacing: 4px;
+      z-index: 3;
+    }
+
+    /* Debug parameter monitor (bottom-right) */
+    .debug-monitor {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      min-width: 150px;
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    .debug-label {
+      color: #666;
+      font-size: 9px;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+
+    .debug-param {
+      font-weight: bold;
+      color: #0f0;
+    }
+
+    .debug-value {
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .debug-normalized {
+      color: #888;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Fixed-size plugin frame (450×300) -->
+  <div class="plugin-frame">
+    <div class="container">
+      <!-- Enhanced gloss overlay for polished chassis -->
+      <div class="gloss-overlay"></div>
+
+      <!-- Plugin name (FLAT silkscreen, no shadow) -->
+      <div class="plugin-name">SPYDER 2000</div>
+
+      <!-- CRITICAL v6: Knobs with SEPARATE SIBLING STRUCTURE -->
+      <!-- Gain knob -->
+      <div class="knob-container" style="left: 57px; top: 60px;">
+        <div class="knob" id="gain-knob" data-param="gain" data-value="5.0" data-min="0" data-max="10">
+          <!-- Rotating base (black glossy cylinder) -->
+          <div class="knob-base rotating">
+            <!-- Texture rotates with base -->
+            <div class="knob-texture"></div>
+          </div>
+
+          <!-- Rotating marker (white line) -->
+          <div class="knob-marker rotating"></div>
+
+          <!-- STATIONARY shine (SIBLING, not child) -->
+          <div class="knob-shine"></div>
+        </div>
+        <!-- FLAT label (no shadow) -->
+        <div class="knob-label">GAIN</div>
+      </div>
+
+      <!-- Tone knob -->
+      <div class="knob-container" style="left: 177px; top: 60px;">
+        <div class="knob" id="tone-knob" data-param="tone" data-value="5.0" data-min="0" data-max="10">
+          <!-- Rotating base -->
+          <div class="knob-base rotating">
+            <div class="knob-texture"></div>
+          </div>
+
+          <!-- Rotating marker -->
+          <div class="knob-marker rotating"></div>
+
+          <!-- STATIONARY shine -->
+          <div class="knob-shine"></div>
+        </div>
+        <div class="knob-label">TONE</div>
+      </div>
+
+      <!-- Level knob -->
+      <div class="knob-container" style="left: 297px; top: 60px;">
+        <div class="knob" id="level-knob" data-param="level" data-value="8.0" data-min="0" data-max="10">
+          <!-- Rotating base -->
+          <div class="knob-base rotating">
+            <div class="knob-texture"></div>
+          </div>
+
+          <!-- Rotating marker -->
+          <div class="knob-marker rotating"></div>
+
+          <!-- STATIONARY shine -->
+          <div class="knob-shine"></div>
+        </div>
+        <div class="knob-label">LEVEL</div>
+      </div>
+
+      <!-- Authentic 7-segment display (LED glow shadows retained) -->
+      <div class="seven-segment-display" id="display">INSANE</div>
+    </div>
+  </div>
+
+  <!-- Debug parameter monitor -->
+  <div class="debug-monitor">
+    <div class="debug-label">PARAMETER MONITOR</div>
+    <div class="debug-param" id="debugParam">—</div>
+    <div class="debug-value" id="debugValue">—</div>
+    <div class="debug-normalized" id="debugNormalized">—</div>
+  </div>
+
+  <script>
+    // Mock JUCE backend for browser testing
+    window.Juce = {
+      getSliderState: (id) => ({
+        normalisedValue: 0.5,
+        valueChangedEvent: {
+          addListener: (fn) => console.log(`Listener added for ${id}`)
+        }
+      })
+    };
+
+    // Disable context menu (REQUIRED for native feel)
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Disable default drag behaviors
+    document.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    });
+
+    // Knob interaction - vertical drag
+    let activeKnob = null;
+    let startY = 0;
+    let startValue = 0;
+    let displayTimeout = null;
+
+    // Mouse down - start dragging
+    document.querySelectorAll('.knob').forEach(knob => {
+      knob.addEventListener('mousedown', (e) => {
+        activeKnob = knob;
+        startY = e.clientY;
+        startValue = parseFloat(knob.dataset.value);
+        e.preventDefault();
+      });
+    });
+
+    // Mouse move - update value
+    document.addEventListener('mousemove', (e) => {
+      if (!activeKnob) return;
+
+      const deltaY = startY - e.clientY;  // Inverted: up = increase
+      const min = parseFloat(activeKnob.dataset.min);
+      const max = parseFloat(activeKnob.dataset.max);
+      const range = max - min;
+
+      // 200px drag = full range
+      const sensitivity = range / 200;
+      let newValue = startValue + (deltaY * sensitivity);
+
+      // Clamp to range
+      newValue = Math.max(min, Math.min(max, newValue));
+
+      // Update knob
+      activeKnob.dataset.value = newValue.toFixed(1);
+      updateKnobRotation(activeKnob, newValue, min, max);
+
+      // Update display
+      const paramId = activeKnob.dataset.param.toUpperCase();
+      const display = document.getElementById('display');
+      display.textContent = `${paramId} ${newValue.toFixed(1)}`;
+
+      // Update debug monitor
+      updateDebugMonitor(paramId, newValue, (newValue - min) / range);
+
+      // Reset display timeout
+      clearTimeout(displayTimeout);
+      displayTimeout = setTimeout(() => {
+        display.textContent = 'INSANE';
+        document.getElementById('debugParam').textContent = '—';
+        document.getElementById('debugValue').textContent = '—';
+        document.getElementById('debugNormalized').textContent = '—';
+      }, 2000);
+
+      e.preventDefault();
+    });
+
+    // Mouse up - stop dragging
+    document.addEventListener('mouseup', () => {
+      activeKnob = null;
+    });
+
+    // CRITICAL v6: Rotate ONLY .rotating elements (base + marker)
+    // .knob-shine does NOT have .rotating class - stays stationary!
+    function updateKnobRotation(knob, value, min, max) {
+      const normalized = (value - min) / (max - min);  // 0 to 1
+      const degrees = -135 + (normalized * 270);       // -135° to +135°
+
+      // Apply rotation to ALL .rotating children (base + marker)
+      const rotatingElements = knob.querySelectorAll('.rotating');
+      rotatingElements.forEach(el => {
+        el.style.transform = `rotate(${degrees}deg)`;
+      });
+
+      // .knob-shine has NO .rotating class - NO transform applied
+      // Shine stays STATIONARY at top-left (30% 25%) position
+    }
+
+    // Update debug monitor
+    function updateDebugMonitor(paramId, value, normalizedValue) {
+      document.getElementById('debugParam').textContent = paramId;
+      document.getElementById('debugValue').textContent = value.toFixed(1);
+      document.getElementById('debugNormalized').textContent = `${(normalizedValue * 100).toFixed(1)}%`;
+    }
+
+    // Initialize knobs at default positions
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.knob').forEach(knob => {
+        const value = parseFloat(knob.dataset.value);
+        const min = parseFloat(knob.dataset.min);
+        const max = parseFloat(knob.dataset.max);
+        updateKnobRotation(knob, value, min, max);
+      });
+    });
+
+    console.log('Spyder2000 UI Mockup v6 loaded');
+    console.log('CRITICAL v6 FIXES:');
+    console.log('  1. STATIONARY KNOB SHINE (MOST CRITICAL):');
+    console.log('     - HTML: knob-base, knob-marker, knob-shine are SIBLINGS');
+    console.log('     - JS: Rotates ONLY .rotating class (base + marker)');
+    console.log('     - Shine has NO .rotating class - stays FIXED');
+    console.log('     - z-index: 3 ensures shine renders above rotating elements');
+    console.log('');
+    console.log('  2. GLOSSY CHASSIS:');
+    console.log('     - Smooth radial gradient (no midline)');
+    console.log('     - Enhanced specular highlights (ellipse at 25% 20%)');
+    console.log('     - Multiple inset shadows for polished aluminum look');
+    console.log('');
+    console.log('  3. GLOSSY DAVIES 1510 KNOBS:');
+    console.log('     - Black glossy cylindrical base (#000 to #404040)');
+    console.log('     - Strong specular highlight (white at 30% 25%)');
+    console.log('     - Deep box-shadows for 3D depth');
+    console.log('');
+    console.log('Preserved from v5:');
+    console.log('  - Flat silkscreen labels (no text-shadow)');
+    console.log('  - 5px corner bevel (Hammond 1590BB style)');
+    console.log('  - 7-segment display with LED glow');
+    console.log('');
+    console.log('Controls: 3 knobs (gain, tone, level)');
+    console.log('Drag knobs vertically to adjust values');
+    console.log('Display shows "INSANE" when idle, parameter values when adjusting');
+  </script>
+</body>
+</html>
