@@ -1,5 +1,6 @@
 #pragma once
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_dsp/juce_dsp.h>
 
 class Spyder2000AudioProcessor : public juce::AudioProcessor
 {
@@ -34,6 +35,17 @@ public:
 private:
     // Parameter layout creation
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
+
+    // DSP Components (declare BEFORE parameters for initialization order)
+    juce::dsp::ProcessSpec spec;
+
+    // Adaptive pre-clipping filters (parallel topology)
+    juce::dsp::IIR::Filter<float> trebleShelfL, trebleShelfR;
+    juce::dsp::IIR::Filter<float> midrangePeakL, midrangePeakR;
+
+    // Temporary buffers for parallel processing (preallocated for real-time safety)
+    juce::AudioBuffer<float> trebleShelfBuffer;
+    juce::AudioBuffer<float> midrangePeakBuffer;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(Spyder2000AudioProcessor)
 };
