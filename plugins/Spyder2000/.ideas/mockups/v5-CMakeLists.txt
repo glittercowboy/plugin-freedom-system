@@ -1,0 +1,52 @@
+# ============================================================================
+# Spyder2000 WebView UI Integration (v5)
+# ============================================================================
+# This snippet should be appended to plugins/Spyder2000/CMakeLists.txt
+# during Stage 3 (GUI) implementation.
+#
+# v5 Design Features:
+# - Flat silkscreen labels (authentic pedal aesthetic)
+# - 5px rounded corners (Hammond 1590BB style)
+# - Davies 1510 knobs with stationary shine
+# - Glossy Ferrari Red chassis
+# - 7-segment display with LED glow
+# ============================================================================
+
+# Add HTML/CSS/JS files as binary data
+juce_add_binary_data(Spyder2000_UIResources
+    SOURCES
+        # Production UI (copy v5-ui.html to this location in Stage 3)
+        Source/ui/public/index.html
+
+        # Additional resources (if needed)
+        # Source/ui/public/css/style.css
+        # Source/ui/public/js/main.js
+        # Source/ui/public/fonts/DSEG7Classic-Regular.woff2
+)
+
+# Link UI resources to plugin target
+target_link_libraries(Spyder2000
+    PRIVATE
+        Spyder2000_UIResources      # Binary data with HTML/CSS/JS
+        juce::juce_gui_extra         # Required for WebBrowserComponent
+)
+
+# Enable WebView in plugin
+target_compile_definitions(Spyder2000
+    PUBLIC
+        JUCE_WEB_BROWSER=1           # Enable WebBrowserComponent
+        JUCE_USE_CURL=0              # Disable curl dependency
+)
+
+# ============================================================================
+# Integration Notes
+# ============================================================================
+#
+# 1. Copy v5-ui.html to Source/ui/public/index.html before building
+# 2. Ensure juce::juce_gui_extra module is available in JUCE installation
+# 3. JUCE_WEB_BROWSER=1 enables WebBrowserComponent on all platforms
+# 4. JUCE_USE_CURL=0 disables unnecessary network features
+# 5. Binary data allows embedding HTML directly in plugin binary
+#    (no external file dependencies at runtime)
+#
+# ============================================================================
