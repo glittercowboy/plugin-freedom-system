@@ -261,6 +261,11 @@ styling:
 - Bool on/off → `toggle` (generates WebToggleButtonRelay)
 - Choice/discrete → `combo` (generates WebComboBoxRelay)
 
+**Layout spacing rules (mandatory):**
+- **Edge padding:** All controls must be at least 15px from window edges. If controls don't fit with proper padding, increase window size - do NOT cram controls closer together.
+- **Control spacing:** Minimum 10px between controls. Grouped controls (e.g., linked attack/release) may be closer if intentional.
+- **Window sizing:** If layout feels cramped after applying spacing rules, increase window dimensions. Professional plugins have breathing room.
+
 ### 3. Generate Browser Test HTML
 
 **Create:** `plugins/[PluginName]/.ideas/mockups/v[N]-ui-test.html`
@@ -454,6 +459,31 @@ for i in $(seq 0 $((CONTROL_COUNT - 1))); do
     if [ $CTRL_Y -lt 0 ]; then
         ERRORS+=("Bounds violation: $CTRL_ID extends past top edge (y=$CTRL_Y)")
         VALIDATION_PASSED=false
+    fi
+
+    # Check edge padding (15px minimum from all edges)
+    MIN_EDGE_PADDING=15
+    if [ $CTRL_X -lt $MIN_EDGE_PADDING ]; then
+        echo "❌ FAIL: $CTRL_ID too close to left edge (${CTRL_X}px, need ${MIN_EDGE_PADDING}px minimum)"
+        VALIDATION_PASSED=false
+        ERRORS+=("Edge padding violation: $CTRL_ID only ${CTRL_X}px from left edge - increase window width or redesign layout")
+    fi
+    if [ $CTRL_Y -lt $MIN_EDGE_PADDING ]; then
+        echo "❌ FAIL: $CTRL_ID too close to top edge (${CTRL_Y}px, need ${MIN_EDGE_PADDING}px minimum)"
+        VALIDATION_PASSED=false
+        ERRORS+=("Edge padding violation: $CTRL_ID only ${CTRL_Y}px from top edge - increase window height or redesign layout")
+    fi
+    RIGHT_PADDING=$((WINDOW_WIDTH - RIGHT_EDGE))
+    if [ $RIGHT_PADDING -lt $MIN_EDGE_PADDING ]; then
+        echo "❌ FAIL: $CTRL_ID too close to right edge (${RIGHT_PADDING}px padding, need ${MIN_EDGE_PADDING}px minimum)"
+        VALIDATION_PASSED=false
+        ERRORS+=("Edge padding violation: $CTRL_ID only ${RIGHT_PADDING}px from right edge - increase window width or redesign layout")
+    fi
+    BOTTOM_PADDING=$((WINDOW_HEIGHT - BOTTOM_EDGE))
+    if [ $BOTTOM_PADDING -lt $MIN_EDGE_PADDING ]; then
+        echo "❌ FAIL: $CTRL_ID too close to bottom edge (${BOTTOM_PADDING}px padding, need ${MIN_EDGE_PADDING}px minimum)"
+        VALIDATION_PASSED=false
+        ERRORS+=("Edge padding violation: $CTRL_ID only ${BOTTOM_PADDING}px from bottom edge - increase window height or redesign layout")
     fi
 done
 
@@ -1115,6 +1145,12 @@ If state update fails:
 - [ ] issues array populated correctly
 - [ ] stateUpdated field accurate
 - [ ] Output fields match generated files
+
+### Layout Spacing
+
+- [ ] All controls at least 15px from window edges
+- [ ] Minimum 10px spacing between controls
+- [ ] No cramped layouts - window sized appropriately for controls
 
 ### Visual Quality
 
