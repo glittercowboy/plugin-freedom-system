@@ -9,62 +9,60 @@ preconditions:
   - None (can work standalone or with creative brief)
 ---
 
-# ui-mockup Skill
+<objective>
+Creates WebView UI mockups for audio plugins through iterative design and implementation scaffolding.
+</objective>
 
-Pure orchestrator for WebView UI mockup workflow. Gathers requirements from user, delegates file generation to specialized subagents.
+<quick_start>
+1. Check for aesthetic library (Phase 0)
+2. Gather requirements through tiered questions (Phases 1-3)
+3. Dispatch ui-design-agent for mockup generation
+4. Iterate until user approves
+5. Generate implementation files
+</quick_start>
 
-**Orchestration Pattern:**
-- NEVER generates files directly
-- Phase A (design iteration): Delegates to ui-design-agent
-- Phase B (implementation scaffolding): Delegates to ui-finalization-agent
-- User interaction handled by orchestrator
-- File generation handled by subagents in fresh contexts
+<workflow>
+<phase name="A-design-iteration">
+<purpose>Generate 2 design files for rapid iteration</purpose>
+<outputs>
+- `v[N]-ui.yaml` - Machine-readable design specification
+- `v[N]-ui-test.html` - Browser-testable mockup
+</outputs>
+<gate>Do NOT proceed to Phase B until user approves design via Phase 5.5 decision menu</gate>
+</phase>
 
-## Two-Phase Workflow
+<phase name="B-implementation-scaffolding">
+<purpose>Generate 5 implementation files ONLY after Phase A approval</purpose>
+<outputs>
+- `v[N]-ui.html` - Production HTML
+- `v[N]-PluginEditor.h` - C++ header boilerplate
+- `v[N]-PluginEditor.cpp` - C++ implementation boilerplate
+- `v[N]-CMakeLists.txt` - WebView build configuration
+- `v[N]-integration-checklist.md` - Implementation steps
+</outputs>
+<location>plugins/[PluginName]/.ideas/mockups/</location>
+</phase>
+</workflow>
 
-### Phase A: Design Iteration
-
-**Purpose:** Generate 2 design files for rapid iteration.
-
-**Outputs:**
-1. `v[N]-ui.yaml` - Machine-readable design specification
-2. `v[N]-ui-test.html` - Browser-testable mockup
-
-**STOP:** Do NOT proceed to Phase B until user approves design via Phase 5.5 decision menu.
-
-### Phase B: Implementation Scaffolding
-
-**Purpose:** Generate 5 implementation files ONLY after Phase A approval.
-
-**Outputs:**
-3. `v[N]-ui.html` - Production HTML
-4. `v[N]-PluginEditor.h` - C++ header boilerplate
-5. `v[N]-PluginEditor.cpp` - C++ implementation boilerplate
-6. `v[N]-CMakeLists.txt` - WebView build configuration
-7. `v[N]-integration-checklist.md` - Implementation steps
-
-All files saved to: `plugins/[PluginName]/.ideas/mockups/`
-
-## Workflow Context Detection
-
-**Standalone Mode:**
+<context_detection>
+<standalone_mode>
 - No `.continue-here.md` file present
 - Generates mockups independently
 - Skips state updates
+</standalone_mode>
 
-**Workflow Mode:**
+<workflow_mode>
 - File `plugins/[PluginName]/.continue-here.md` exists with `current_stage` field
 - Updates workflow state after each phase
+</workflow_mode>
 
 Check for `.continue-here.md` existence to determine mode. If present, update state files. If absent, skip state updates.
+</context_detection>
 
-## Phase 0: Check for Aesthetic Library
-
+<phase name="0-aesthetic-check">
 Check if `.claude/aesthetics/manifest.json` exists. If found, count aesthetics using jq.
 
-**If aesthetics exist, present menu:**
-
-```
+<menu>
 Found {N} saved aesthetics in library.
 
 How would you like to start the UI design?
@@ -73,177 +71,69 @@ How would you like to start the UI design?
 3. List all aesthetics - Browse library before deciding
 
 Choose (1-3): _
-```
+</menu>
 
-**Option 1:** Display aesthetics from manifest with metadata (name, vibe, colors, source). Invoke ui-template-library skill with "apply" operation. Skip to Phase 4 with generated mockup.
-
-**Option 2:** Continue to Phase 1 (load context).
-
-**Option 3:** Invoke ui-template-library skill with "list" operation, show previews, return to menu.
-
-**If no aesthetics:** Skip directly to Phase 1.
+<routing>
+- Option 1: Display aesthetics from manifest with metadata (name, vibe, colors, source). Invoke ui-template-library skill with "apply" operation. Skip to Phase 4 with generated mockup.
+- Option 2: Continue to Phase 1 (load context).
+- Option 3: Invoke ui-template-library skill with "list" operation, show previews, return to menu.
+- No aesthetics: Skip directly to Phase 1.
+</routing>
 
 See `references/aesthetic-integration.md` for complete integration details.
+</phase>
 
----
+<phase name="1-load-context">
+Load context from creative brief and extract requirements.
+See `references/phase-details.md` for extraction protocol.
+See `references/context-extraction.md#example-extracting-from-creative-brief` for examples.
+</phase>
 
-## Phase 1: Load Context from Creative Brief
+<phase name="1.5-context-aware-prompt">
+Adapt initial prompt based on creative brief contents (rich/minimal/zero UI details).
+See `references/phase-details.md` for prompt templates.
+</phase>
 
-If `plugins/$PLUGIN_NAME/.ideas/creative-brief.md` exists, read it and extract:
-- Plugin type (compressor, EQ, reverb, synth, utility)
-- Parameter count and types
-- Visual style mentions
-- Layout preferences
-- Special elements (meters, waveforms, visualizers)
-- Color/theme references
+<phase name="2-gap-analysis">
+Analyze gaps in Tier 1 (Critical), Tier 2 (Visual), Tier 3 (Polish) requirements.
+See `references/phase-details.md` for tier definitions.
+See `references/design-questions.md` for question templates.
+</phase>
 
-See `references/context-extraction.md#example-extracting-from-creative-brief` for extraction examples.
+<phase name="2.5-calculate-dimensions">
+Calculate recommended window size before asking user.
+See `references/phase-details.md` for calculation steps.
+See `references/layout-validation.md` Section 2 for formulas.
+</phase>
 
-**Extract UI context:**
-- UI Concept section: Layout preferences, visual style
-- Parameters: Count and types (determines control layout)
-- Plugin type: Affects typical layouts
-- Vision section: Visual references or inspirations
-
-## Phase 1.5: Context-Aware Initial Prompt
-
-Adapt prompt based on creative brief contents:
-
-**Rich UI details exist:**
-```
-I see you want [extracted description from UI Concept] for [PluginName]. Let's refine that vision. Tell me more about the layout, control arrangement, and visual elements you're imagining.
-```
-
-**Minimal UI details:**
-```
-Let's design the UI for [PluginName]. You mentioned it's a [type] with [X] parameters. What layout and style are you envisioning?
-```
-
-**Zero UI context:**
-```
-Let's design the UI for [PluginName]. What do you envision? (layout, style, controls, visual elements)
-```
-
-Don't ask user to repeat information from creative brief. Build on what they provided.
-
-**Listen for:** Layout preferences, visual references, mood/feel, special requests.
-
-Capture verbatim notes before moving to targeted questions.
-
-## Phase 2: Gap Analysis and Question Prioritization
-
-**Question Priority Tiers:**
-- **Tier 1 (Critical):** Layout structure, control types
-- **Tier 2 (Visual):** Visual style, key visual elements
-- **Tier 3 (Polish):** Colors, typography, animations
-
-Extract from Phase 1.5 response and creative brief. Identify gaps in coverage. Never ask about already-provided information.
-
-## Phase 2.5: Calculate Recommended Dimensions
-
-Calculate space requirements before asking for window size.
-
-See `references/layout-validation.md` Section 2 (Calculation Helpers) for formulas.
-
-**Steps:**
-1. Parse requirements: Count controls, identify layout type, note special elements
-2. Estimate control sizes using typical sizes from layout-validation.md
-3. Apply layout-specific formula (horizontal/vertical/grid)
-4. Calculate: `recommended = absolute_minimum × 1.2`, round to nearest 50px
-5. Enforce constraints: min 400×300, max 1200×800
-
-**Present calculation:**
-```
-Based on your requirements:
-- Layout: [type]
-- Controls: [count] controls ([types])
-- Special elements: [list]
-
-Calculated space requirements:
-- Absolute minimum: [min_width] × [min_height] px
-- Recommended: [rec_width] × [rec_height] px
-
-[Continue to Phase 3]
-```
-
-Store calculated dimensions for Phase 3. DO NOT ask for window size yet.
-
-## Phase 3: Question Batch Generation
-
+<phase name="3-question-batch">
 Generate exactly 4 questions using AskUserQuestion based on identified gaps.
+See `references/phase-details.md` for rules and question format.
+See `references/design-questions.md#example-question-batches` for templates.
+</phase>
 
-**Rules:**
-- If 4+ gaps exist: ask top 4 by tier priority
-- If fewer gaps: pad with tier 3 questions
-- Provide meaningful options (not just open text)
-- "Other" option automatically added
-- Users can skip via "Other" and typing "skip"
+<phase name="3.5-decision-gate">
+Present decision gate with AskUserQuestion: finalize, ask more questions, or add context.
+Route to Phase 4, back to Phase 2, or collect free-form text.
+See `references/phase-details.md` for menu format and routing.
+</phase>
 
-**Note:** Internal questions use AskUserQuestion tool. Final decision menus (Phase 5.5, 10.7) use inline numbered format per checkpoint protocol.
-
-**Window Size Question (uses Phase 2.5 calculations):**
-
-```
-Question:
-  question: "Window dimensions for your plugin?"
-  header: "Window size"
-  options:
-    - label: "[calculated_width]×[calculated_height] (recommended)"
-      description: "Calculated based on your layout and controls"
-    - label: "Custom size"
-      description: "Specify different dimensions"
-```
-
-If custom size chosen, ask for specific dimensions. If smaller than absolute minimum, present warning menu.
-
-See `references/design-questions.md#example-question-batches` for question templates and tiering examples.
-
-## Phase 3.5: Decision Gate
-
-Use AskUserQuestion after each question batch:
-
-```
-Question:
-  question: "Ready to finalize the mockup design?"
-  header: "Next step"
-  options:
-    - label: "Yes, finalize it"
-      description: "Generate YAML and test HTML"
-    - label: "Ask me 4 more questions"
-      description: "Continue refining"
-    - label: "Let me add more context first"
-      description: "Provide additional details"
-```
-
-**Route based on answer:**
-- Option 1 → Proceed to Phase 4
-- Option 2 → Return to Phase 2 (re-analyze gaps)
-- Option 3 → Collect free-form text, return to Phase 2
-
-## Phase 4-5.45: Dispatch ui-design-agent
-
+<phase name="4-5.45-design-agent">
 Invoke ui-design-agent via Task tool to generate YAML + test HTML.
 
-See `references/delegation-protocols.md` for complete invocation protocol.
+Include in invocation prompt:
+- All gathered requirements (layout, controls, colors, etc.)
+- Quality expectation: "Design must look like commercial $50-200 audio plugin - intentional decisions, not defaults"
 
-**Summary:**
-1. Read context files in parallel (creative-brief.md, aesthetic template, previous version)
-2. Detect version number (find highest v[N], increment)
-3. Construct prompt with all context
-4. Invoke via Task tool with subagent_type: "ui-design-agent"
-5. Wait for JSON report
-6. Handle result (error menu if failed, continue to Phase 5.5 if success)
+See `references/phase-details.md` for invocation summary.
+See `references/delegation-protocols.md` for complete protocol.
+</phase>
 
----
+<phase name="5.5-design-decision-menu">
+<gate>CRITICAL: Phases 6-10 ONLY execute if user chooses option 2 (Finalize)</gate>
 
-## Phase 5.5: Design Decision Menu (GATE)
-
-**CRITICAL:** Phases 6-10 ONLY execute if user chooses option 2 (Finalize).
-
-Present decision menu:
-
-```
-✓ Mockup v[N] design created (2 files)
+<menu>
+Mockup v[N] design created (2 files)
 
 Files generated:
 - v[N]-ui.yaml (design specification)
@@ -257,90 +147,62 @@ What would you like to do?
 4. Other
 
 Choose (1-4): _
-```
+</menu>
 
-**Option 1: Iterate**
-- Collect refinement feedback
-- Return to Phase 2 with new version (v2, v3, etc.)
-- Invoke NEW ui-design-agent instance (fresh context)
+<routing>
+- Option 1 (Iterate): Collect refinement feedback, return to Phase 2 with new version (v2, v3, etc.), invoke NEW ui-design-agent instance (fresh context).
+- Option 2 (Finalize): Proceed to Phase 5.6 (automatic brief update), mockup is source of truth for UI sections, no user interaction needed, continue to Phase 6-10 after brief sync.
+- Option 3 (Save as template): Invoke ui-template-library skill with "save" operation, after saving return to Phase 5.5 menu.
+- Option 4 (Other): Handle custom request (test in browser, validate constraints, etc.).
+</routing>
 
-**Option 2: Finalize**
-- Proceed to Phase 5.6 (automatic brief update)
-- Mockup is source of truth for UI sections
-- No user interaction needed
-- Continue to Phase 6-10 after brief sync
+<iteration_guidance>
+When collecting feedback for Option 1 (Iterate):
 
-**Option 3: Save as template**
-- Invoke ui-template-library skill with "save" operation
-- After saving, return to Phase 5.5 menu
+**If user provides specific changes** ("make it vertical", "add a meter", "change colors to blue"):
+- Pass these as explicit requirements to new ui-design-agent instance
 
-**Option 4: Other**
-- Handle custom request (test in browser, validate constraints, etc.)
+**If user provides vague improvement requests** ("make it better", "improve it", "polish it"):
+- Prompt for specifics: "What aspect should I focus on? (layout, colors, spacing, controls)"
+- If user says "everything" or "overall quality": Pass instruction to refine existing elements (spacing, color harmony, control styling) rather than add new elements
+</iteration_guidance>
 
 See `references/decision-menus.md#phase-5-5-design-decision-menu` for detailed routing.
+</phase>
 
----
+<phase name="5.6-update-brief">
+Automatic update of creative brief from finalized mockup.
+Triggered by "Finalize" selection in Phase 5.5.
+No user interaction required.
+See `references/phase-details.md` for protocol.
+</phase>
 
-## Phase 5.6: Update Creative Brief from Finalized Mockup
-
-**Trigger:** User selected "Finalize" in Phase 5.5
-
-**Protocol:**
-
-1. Check if `creative-brief.md` exists. If not, skip to Phase 6-10.
-2. Determine plugin name and mockup version.
-3. Execute: `.claude/utils/sync-brief-from-mockup.sh "${PLUGIN_NAME}" "${MOCKUP_VERSION}"`
-4. Script preserves conceptual sections (Vision, Use Cases, Inspirations), updates Parameters and UI Concept from mockup.
-5. Update `.continue-here.md` with sync metadata (if workflow mode).
-6. Commit changes.
-7. Present confirmation, continue to Phase 6-10.
-
-**No user interaction required** - automatic update with confirmation display only.
-
----
-
-## Phase 6-10: Implementation Scaffolding (PHASE B)
-
-**Prerequisites for ALL Phase B phases:**
+<phase name="6-10-implementation">
+<prerequisites>
 - User confirmed design in Phase 5.5 (selected option 2: Finalize)
 - Phase A files exist (`v[N]-ui.yaml`, `v[N]-ui-test.html`)
 - Finalization marker present in YAML
+</prerequisites>
 
 See `references/phase-b-enforcement.md` for guard implementation.
+</phase>
 
-## Phase 6-10.5: Dispatch ui-finalization-agent
-
+<phase name="6-10.5-finalization-agent">
 Invoke ui-finalization-agent via Task tool to generate 5 implementation files.
+See `references/phase-details.md` for invocation summary.
+See `references/delegation-protocols.md` for complete protocol.
+</phase>
 
-See `references/delegation-protocols.md` for complete invocation protocol.
-
-**Summary:**
-1. Read finalized design files in parallel (YAML, HTML, parameter-spec.md if exists)
-2. Detect if parameter-spec.md generation needed (v1 mockups only)
-3. Construct prompt with contracts
-4. Invoke via Task tool with subagent_type: "ui-finalization-agent"
-5. Wait for JSON report
-6. Handle result (error menu if failed, continue to Phase 10.7 if success)
-
----
-
-## Phase 10.7: Completion Menu
-
+<phase name="10.7-completion-menu">
 Present completion menu after ui-finalization-agent returns successfully.
-
 See `references/decision-menus.md#completion-menu` for format and routing.
+</phase>
 
----
+<orchestration_protocol>
+<delegation_rules>
+This skill NEVER generates mockup files directly. ALL file generation delegated to subagents.
 
-## Orchestration Protocol
-
-Pure orchestrator pattern with strict delegation rules.
-
-### Delegation Rules
-
-**This skill NEVER generates mockup files directly. ALL file generation delegated to subagents.**
-
-Correct sequence:
+<sequence>
 1. Orchestrator: Gather requirements (Phases 0-3.5)
 2. Orchestrator: Invoke ui-design-agent via Task tool
 3. ui-design-agent: Generate YAML + test HTML, commit, return JSON
@@ -350,100 +212,99 @@ Correct sequence:
 7. Orchestrator: Invoke ui-finalization-agent via Task tool
 8. ui-finalization-agent: Generate 5 files, commit, return JSON
 9. Orchestrator: Parse JSON, present completion menu
+</sequence>
 
 See `references/delegation-protocols.md` for enforcement details.
+</delegation_rules>
 
-### State Management
-
+<state_management>
 Subagents update `.continue-here.md` with their phase results. Orchestrator verifies `stateUpdated` flag in JSON report.
-
-**State Verification Protocol:**
 
 After subagent returns `stateUpdated: true`, verify actual state contents match expected values (not just boolean flag).
 
 Read `.continue-here.md`, parse YAML, check specific fields match JSON report values. If mismatch, present state recovery menu.
 
 See `references/state-tracking.md` for complete state schema and verification protocol.
+</state_management>
 
-### Iteration Protocol
+<iteration_protocol>
+Each iteration runs in fresh agent context. User chooses "Iterate" then orchestrator collects feedback and invokes NEW ui-design-agent with incremented version. Fresh context prevents context window bloat during iterative design.
+</iteration_protocol>
 
-Each iteration runs in fresh agent context. User chooses "Iterate" → Orchestrator collects feedback → Invokes NEW ui-design-agent with incremented version. Fresh context prevents context window bloat during iterative design.
+<error_handling>
+- Agent failures: Present error menu (retry/manual fix/debug/cancel).
+- Validation failures: Agent returns `validationPassed: false` - present error menu.
+- State update failures: Agent returns `stateUpdated: false` - present state recovery menu (verify/manual update/continue anyway).
+</error_handling>
+</orchestration_protocol>
 
-### Error Handling
+<versioning_strategy>
+Pattern: v1, v2, v3... Each version saved separately.
 
-**Agent failures:** Present error menu (retry/manual fix/debug/cancel).
+Purpose: Explore layouts without losing work, A/B test designs, keep history for rollback.
 
-**Validation failures:** Agent returns `validationPassed: false` → Present error menu.
+File naming: All 7 files prefixed with version (e.g., `v2-ui.html`, `v2-PluginEditor.h`).
 
-**State update failures:** Agent returns `stateUpdated: false` → Present state recovery menu (verify/manual update/continue anyway).
-
----
-
-## Versioning Strategy
-
-**Pattern:** v1, v2, v3... Each version saved separately.
-
-**Purpose:** Explore layouts without losing work, A/B test designs, keep history for rollback.
-
-**File naming:** All 7 files prefixed with version (e.g., `v2-ui.html`, `v2-PluginEditor.h`).
-
-**Implementation:** Latest version used for Stage 3 (GUI) unless user specifies different version.
+Implementation: Latest version used for Stage 3 (GUI) unless user specifies different version.
 
 See `references/versioning.md` for file management details.
+</versioning_strategy>
 
----
-
-## Success Criteria
-
-**Design phase successful when:**
+<success_criteria>
+<design_phase>
 - YAML spec generated matching user requirements
 - Browser test HTML works (interactive controls, parameter messages)
+- Visual quality meets commercial standard (intentional design, not defaults)
 - Design files committed to git
 - `.continue-here.md` updated with version (if workflow mode)
 - User presented with Phase 5.5 decision menu
 - Design approved OR user iterates with refinements
+</design_phase>
 
-**Implementation phase successful when:**
+<implementation_phase>
 - All 7 files generated and saved to `.ideas/mockups/`
 - Production HTML complete (no placeholders)
 - C++ boilerplate matches YAML structure (correct parameter bindings)
 - parameter-spec.md generated and locked (v1 only)
 - Implementation files committed to git
 - `.continue-here.md` updated with finalization status (if workflow mode)
+</implementation_phase>
+</success_criteria>
 
----
-
-## Integration Points
-
-**Invoked by:**
-- `/dream` command → After creative brief, before implementation
-- `plugin-workflow` skill → During Stage 0 (UI design phase)
-- `plugin-improve` skill → When redesigning existing plugin UI
+<integration_points>
+<invoked_by>
+- `/dream` command - After creative brief, before implementation
+- `plugin-workflow` skill - During Stage 0 (UI design phase)
+- `plugin-improve` skill - When redesigning existing plugin UI
 - Natural language: "Design UI for [PluginName]", "Create mockup for compressor"
+</invoked_by>
 
-**Always invokes (via Task tool):**
+<always_invokes>
 - `ui-design-agent` subagent (Phase 4-5.45) - REQUIRED for design iteration
 - `ui-finalization-agent` subagent (Phase 6-10.5) - REQUIRED for implementation files
+</always_invokes>
 
-**Also invokes:**
+<also_invokes>
 - `ui-template-library` skill (if user saves aesthetic)
+</also_invokes>
 
-**Creates (via subagents):**
+<creates>
 - `plugins/[Name]/.ideas/mockups/v[N]-*.{yaml,html,h,cpp,txt,md}` (7 files)
 - `plugins/[Name]/.ideas/parameter-spec.md` (if v1 and doesn't exist)
+</creates>
 
-**Updates (via subagents):**
-- `PLUGINS.md` → Mark UI designed (if workflow)
-- `.continue-here.md` → Update workflow state (if workflow)
+<updates>
+- `PLUGINS.md` - Mark UI designed (if workflow)
+- `.continue-here.md` - Update workflow state (if workflow)
+</updates>
 
-**Blocks:**
-- Stage 1 (Foundation) → Cannot proceed without parameter-spec.md
-- Stage 3 (GUI) → Cannot implement without approved UI mockup
+<blocks>
+- Stage 1 (Foundation) - Cannot proceed without parameter-spec.md
+- Stage 3 (GUI) - Cannot implement without approved UI mockup
+</blocks>
+</integration_points>
 
----
-
-## Reference Documentation
-
+<reference_documentation>
 Progressive disclosure - load references when reaching specific phases:
 
 - **Phase 0:** `references/aesthetic-integration.md` - Aesthetic library integration
@@ -456,17 +317,18 @@ Progressive disclosure - load references when reaching specific phases:
 - **Phase 6-10:** `references/phase-b-enforcement.md` - Phase B guard
 - **Anti-patterns:** `references/common-pitfalls.md` - What to avoid
 
-**Technical details:**
+Technical details:
 - `references/html-generation.md` - Production HTML rules
 - `references/browser-testing.md` - Browser test workflow
 - `references/cmake-configuration.md` - WebView build settings
 - `references/cpp-boilerplate-generation.md` - C++ template generation
 - `references/ui-design-rules.md` - Design constraints and patterns
 - `references/versioning.md` - File management
+</reference_documentation>
 
-## Template Assets
-
+<template_assets>
 - `assets/ui-yaml-template.yaml` - YAML structure
 - `assets/webview-boilerplate.md` - C++ integration templates
 - `assets/integration-checklist-template.md` - Integration guide
 - `assets/parameter-spec-template.md` - Parameter specification format
+</template_assets>

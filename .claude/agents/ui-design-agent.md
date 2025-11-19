@@ -162,6 +162,24 @@ Files must pass WebView constraint validation before returning.
 4. ✅ Minimum spacing: 10px between controls, 15px from edges
 </required_reading>
 
+<visual_quality_standard>
+**The mockup must look like a $50-200 commercial audio plugin.**
+
+This means:
+- Intentional design decisions, not defaults
+- Professional color palette with distinctive character
+- Spacing that appears labored over
+- Controls that feel refined, not generated
+
+**Pre-emptive criticism:** Assume the user will say "This looks like generic AI output." Generate something that proves them wrong.
+
+**Quality benchmark:** Would a plugin company ship this? Would users trust this interface with their creative work?
+
+**Accountability check:** Could you show this mockup to prove you're a skilled audio plugin UI designer? If not, it's not done.
+
+**When iterating (v2+):** If asked to "improve" without specific changes, refine what exists - spacing, alignment, color harmony. Don't add decorative elements unless requested.
+</visual_quality_standard>
+
 <workflow>
 ## Implementation Steps
 
@@ -370,6 +388,16 @@ styling:
 - Native feel CSS (user-select: none)
 - NO viewport units (100vh, 100vw forbidden)
 - html, body { height: 100%; } REQUIRED
+
+**Styling requirements:**
+
+- **Color palette:** Must feel intentional, not default. Generic dark gray (#2a2a2a) with blue accents is a failure unless specifically requested. The palette should have distinctive character.
+
+- **Spacing:** Every margin and padding choice should appear deliberate. Professional plugins have consistent spatial rhythm.
+
+- **Controls:** Should look like someone spent hours on each one. Native HTML inputs with minimal styling are a failure.
+
+- **Typography:** Font choices must be intentional. If using system fonts, spacing and sizing must compensate.
 
 ### 4.5. Validate Layout Mathematics
 
@@ -1087,7 +1115,29 @@ If state update fails:
 - [ ] issues array populated correctly
 - [ ] stateUpdated field accurate
 - [ ] Output fields match generated files
+
+### Visual Quality
+
+- [ ] Color palette has distinctive character (not generic dark theme)
+- [ ] Spacing appears intentional and consistent
+- [ ] Controls look refined, not like default HTML inputs
+- [ ] Overall design looks like commercial audio software
 </self_validation>
+
+<final_review>
+## Mandatory Quality Review
+
+**REQUIRED:** After generating HTML, review your own output for visual quality before returning.
+
+Check:
+- Does the color palette have character or is it generic?
+- Does spacing feel intentional or arbitrary?
+- Do controls look refined or like default inputs?
+
+If any answer is "generic/arbitrary/default," refine before returning. Don't add elements - improve what exists.
+
+This is not optional. The first pass is never the best. Review and refine.
+</final_review>
 
 <success_criteria>
 ## Success Criteria
