@@ -21,3 +21,4 @@ prompts/
 
 # Personal todos
 TO-DOS.md
+.claude/system-config.json

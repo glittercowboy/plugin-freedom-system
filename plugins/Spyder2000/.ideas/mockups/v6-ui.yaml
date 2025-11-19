@@ -1,0 +1,173 @@
+# Spyder2000 UI Mockup v6
+# CRITICAL FIXES: Stationary knob shine + glossy chassis + Davies 1510 knobs
+
+window:
+  width: 450
+  height: 300
+  resizable: false
+
+controls:
+  - id: gain
+    type: slider  # Maps to WebSliderRelay
+    position: { x: 57, y: 60 }
+    size: { diameter: 95 }
+    range: [0.0, 10.0]
+    default: 5.0
+    label: "GAIN"
+    label_position: below
+
+  - id: tone
+    type: slider  # Maps to WebSliderRelay
+    position: { x: 177, y: 60 }
+    size: { diameter: 95 }
+    range: [0.0, 10.0]
+    default: 5.0
+    label: "TONE"
+    label_position: below
+
+  - id: level
+    type: slider  # Maps to WebSliderRelay
+    position: { x: 297, y: 60 }
+    size: { diameter: 95 }
+    range: [0.0, 10.0]
+    default: 8.0
+    label: "LEVEL"
+    label_position: below
+
+styling:
+  colors:
+    # Ferrari Red glossy chassis (enhanced from v5)
+    background: "#DC143C"
+    background_gradient:
+      type: radial
+      stops:
+        - { color: "#FF1744", position: 0% }
+        - { color: "#DC143C", position: 50% }
+        - { color: "#8B0000", position: 100% }
+
+    # Davies 1510 black glossy knobs
+    knob_base: "#000000"
+    knob_gradient:
+      type: radial
+      stops:
+        - { color: "#404040", position: 0% }   # Lighter gray at highlight
+        - { color: "#1a1a1a", position: 30% }  # Mid tone
+        - { color: "#000000", position: 100% } # Deep black
+
+    # White marker line
+    knob_indicator: "#ffffff"
+
+    # Labels - flat silkscreen white
+    label_color: "#ffffff"
+
+    # 7-segment display - amber LED
+    display_color: "#FF6600"
+    display_glow: "rgba(255, 102, 0, 0.8)"
+
+  fonts:
+    plugin_name: "'Arial Black', sans-serif"
+    labels: "Arial, sans-serif"
+    display: "'DSEG7 Classic', monospace"
+
+  effects:
+    # Hammond 1590BB beveled edges (5px corner radius)
+    corner_radius: 5px
+
+    # CRITICAL v6: Glossy chassis finish
+    chassis_gloss:
+      type: multiple_radial_gradients
+      highlights:
+        - position: "30% 30%"
+          color: "rgba(255, 255, 255, 0.35)"
+          spread: 40%
+        - position: "25% 20%"
+          color: "rgba(255, 255, 255, 0.4)"
+          spread: 60%
+      shadows:
+        inset:
+          - "inset 8px 8px 12px rgba(255, 107, 107, 0.4)"
+          - "inset -8px -8px 12px rgba(90, 0, 0, 0.6)"
+          - "inset 4px 4px 8px rgba(255, 107, 107, 0.25)"
+          - "inset -4px -4px 8px rgba(90, 0, 0, 0.4)"
+
+    # CRITICAL v6: Davies 1510 glossy knobs
+    knob_gloss:
+      type: radial_gradient
+      highlight_position: "30% 25%"
+      highlight_color: "rgba(255, 255, 255, 0.9)"
+      highlight_spread: 50%
+      shadows:
+        outer:
+          - "0 6px 12px rgba(0, 0, 0, 0.6)"
+        inset:
+          - "inset 0 4px 8px rgba(255, 255, 255, 0.3)"
+          - "inset 0 -3px 6px rgba(0, 0, 0, 0.5)"
+
+    # CRITICAL v6: Stationary knob shine structure
+    knob_shine:
+      type: separate_layer
+      structure: sibling  # NOT child of rotating element
+      position: absolute
+      no_transform: true  # NEVER rotates
+      gradient:
+        type: radial
+        position: "30% 25%"
+        stops:
+          - { color: "rgba(255, 255, 255, 0.9)", position: 0% }
+          - { color: "rgba(255, 255, 255, 0.4)", position: 25% }
+          - { color: "transparent", position: 50% }
+      z_index: 3  # Above rotating elements
+      pointer_events: none
+
+special_elements:
+  - type: text
+    id: plugin_name
+    text: "SPYDER 2000"
+    position: { x: center, y: 20 }
+    style: flat_silkscreen  # NO text-shadow
+    font_size: 24px
+    letter_spacing: 3px
+
+  - type: display
+    id: seven_segment
+    text: "INSANE"
+    position: { x: center, y: 260 }
+    font: DSEG7
+    size: 32px
+    color: "#FF6600"
+    glow: true  # LED glow effect retained
+
+layout:
+  type: horizontal
+  knob_spacing: 120px
+  knob_y_position: 60px
+  edge_margin: 57px
+
+notes: |
+  v6 CRITICAL FIXES:
+
+  1. STATIONARY KNOB SHINE (MOST CRITICAL):
+     - HTML structure: knob-base, knob-marker, knob-shine are SIBLINGS
+     - JavaScript rotates ONLY .knob-base and .knob-marker
+     - .knob-shine has NO .rotating class, NO transform applied
+     - z-index: 3 ensures shine renders above rotating elements
+     - pointer-events: none prevents shine from blocking clicks
+
+  2. GLOSSY CHASSIS:
+     - Smooth radial gradient (no distinct midline)
+     - Top-left ellipse highlight at 25% 20%
+     - Enhanced box-shadow insets for depth
+     - Multiple gradient layers for polished aluminum look
+
+  3. GLOSSY DAVIES 1510 KNOBS:
+     - Black base (#000000 to #404040 radial gradient)
+     - Strong specular highlight (white ellipse at 30% 25%)
+     - Deep box-shadows for 3D depth (inset + outer)
+     - Cylindrical texture with subtle conic gradient
+
+  Preserved from v5:
+  - Flat silkscreen labels (no text-shadow)
+  - 5px corner bevel (Hammond 1590BB style)
+  - Beveled chassis edges
+  - 7-segment display with LED glow
+  - 450×300px window (non-resizable)

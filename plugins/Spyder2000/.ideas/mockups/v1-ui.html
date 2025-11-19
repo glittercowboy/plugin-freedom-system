@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spyder2000</title>
+
+  <style>
+    /* CRITICAL: WebView constraints - NO viewport units */
+    html, body {
+      height: 100%;  /* REQUIRED - replaces viewport units */
+      margin: 0;
+      padding: 0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      /* Native application feel (REQUIRED) */
+      user-select: none;
+      -webkit-user-select: none;
+      -moz-user-select: none;
+      -ms-user-select: none;
+      cursor: default;
+      overflow: hidden;
+      font-family: Arial, sans-serif;
+    }
+
+    /* Plugin UI container */
+    .container {
+      width: 100%;
+      height: 100%;
+      position: relative;
+
+      /* Ferrari Red glossy background */
+      background: radial-gradient(
+        ellipse at 50% 33%,
+        #FF1744 0%,
+        #DC143C 50%,
+        #8B0000 100%
+      );
+    }
+
+    /* Gloss overlay for shine effect */
+    .gloss-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 50%;
+      background: linear-gradient(
+        to bottom,
+        rgba(255, 255, 255, 0.3) 0%,
+        rgba(255, 255, 255, 0.1) 50%,
+        rgba(255, 255, 255, 0) 100%
+      );
+      pointer-events: none;
+    }
+
+    /* Plugin name */
+    .plugin-name {
+      position: absolute;
+      top: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'Arial Black', sans-serif;
+      font-size: 24px;
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+      letter-spacing: 3px;
+    }
+
+    /* Knob container */
+    .knob-container {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Knob body (rotates as whole unit) */
+    .knob {
+      width: 80px;
+      height: 80px;
+      position: relative;
+      cursor: pointer;
+      transform-origin: center center;
+      transition: transform 50ms;
+    }
+
+    /* Knob background circle */
+    .knob-bg {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: #2a2a2a;
+      box-shadow:
+        inset -3px -3px 8px rgba(0, 0, 0, 0.7),
+        inset 3px 3px 8px rgba(100, 100, 100, 0.3),
+        0 4px 8px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    /* POD-style rubber texture */
+    .knob-texture {
+      position: absolute;
+      width: 70%;
+      height: 70%;
+      top: 15%;
+      left: 15%;
+      border-radius: 50%;
+      background: repeating-conic-gradient(
+        from 0deg,
+        #1a1a1a 0deg 2deg,
+        #333333 2deg 4deg
+      );
+    }
+
+    /* Knob indicator line (rotates with knob) */
+    .knob-indicator {
+      position: absolute;
+      width: 3px;
+      height: 25px;
+      background: #ffffff;
+      top: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border-radius: 2px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+    }
+
+    /* Knob label */
+    .knob-label {
+      font-size: 14px;
+      font-weight: bold;
+      color: #ffffff;
+      text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.8);
+      letter-spacing: 1px;
+    }
+
+    /* 7-segment display */
+    .seven-segment-display {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 40px;
+      background: #1a1a1a;
+      border: 2px solid #333;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Courier New', monospace;
+      font-size: 20px;
+      font-weight: bold;
+      color: #FF4500;
+      text-shadow: 0 0 10px #FF4500, 0 0 20px #FF4500;
+      letter-spacing: 2px;
+      box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Gloss overlay for shine -->
+    <div class="gloss-overlay"></div>
+
+    <!-- Plugin name -->
+    <div class="plugin-name">SPYDER 2000</div>
+
+    <!-- Gain knob -->
+    <div class="knob-container" style="left: 65px; top: 80px;">
+      <div class="knob" id="gain-knob" data-param="gain">
+        <div class="knob-bg">
+          <div class="knob-texture"></div>
+          <div class="knob-indicator"></div>
+        </div>
+      </div>
+      <div class="knob-label">GAIN</div>
+    </div>
+
+    <!-- Tone knob -->
+    <div class="knob-container" style="left: 185px; top: 80px;">
+      <div class="knob" id="tone-knob" data-param="tone">
+        <div class="knob-bg">
+          <div class="knob-texture"></div>
+          <div class="knob-indicator"></div>
+        </div>
+      </div>
+      <div class="knob-label">TONE</div>
+    </div>
+
+    <!-- Level knob -->
+    <div class="knob-container" style="left: 305px; top: 80px;">
+      <div class="knob" id="level-knob" data-param="level">
+        <div class="knob-bg">
+          <div class="knob-texture"></div>
+          <div class="knob-indicator"></div>
+        </div>
+      </div>
+      <div class="knob-label">LEVEL</div>
+    </div>
+
+    <!-- 7-segment display -->
+    <div class="seven-segment-display" id="display">INSANE</div>
+  </div>
+
+  <!-- JUCE WebView integration -->
+  <script type="module" src="js/juce/index.js"></script>
+  <script type="module">
+    import { getSliderState } from './js/juce/index.js';
+
+    // Disable context menu (REQUIRED)
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Disable default drag behaviors
+    document.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    });
+
+    // Knob interaction state
+    let activeKnob = null;
+    let lastY = 0;
+    let displayTimeout = null;
+
+    // Parameter state objects
+    const parameterStates = {};
+
+    // Initialize all knobs
+    const knobs = document.querySelectorAll('.knob');
+    knobs.forEach(knob => {
+      const paramId = knob.dataset.param;
+
+      // Get JUCE parameter state
+      const sliderState = getSliderState(paramId);
+      if (!sliderState) {
+        console.error(`Failed to get slider state for ${paramId}`);
+        return;
+      }
+
+      parameterStates[paramId] = sliderState;
+
+      // Listen for parameter changes from APVTS (automation, preset recall)
+      sliderState.valueChangedEvent.addListener(() => {
+        const normalizedValue = sliderState.getNormalisedValue();
+        updateKnobRotation(knob, normalizedValue);
+      });
+
+      // Set initial rotation
+      const initialValue = sliderState.getNormalisedValue();
+      updateKnobRotation(knob, initialValue);
+    });
+
+    // Mouse down - start dragging (relative drag pattern)
+    document.addEventListener('mousedown', (e) => {
+      const knob = e.target.closest('.knob');
+      if (!knob) return;
+
+      activeKnob = knob;
+      lastY = e.clientY;  // Store current position for relative drag
+      e.preventDefault();
+    });
+
+    // Mouse move - update knob value (frame-delta pattern)
+    document.addEventListener('mousemove', (e) => {
+      if (!activeKnob) return;
+
+      const paramId = activeKnob.dataset.param;
+      const sliderState = parameterStates[paramId];
+      if (!sliderState) return;
+
+      // Calculate frame delta (relative to last frame, not start)
+      const deltaY = lastY - e.clientY;  // Inverted: up = increase
+      lastY = e.clientY;  // Update for next frame
+
+      // Get current normalized value (0 to 1)
+      let normalizedValue = sliderState.getNormalisedValue();
+
+      // 200px drag = full range (0.005 per pixel)
+      const sensitivity = 1.0 / 200.0;
+      normalizedValue += deltaY * sensitivity;
+
+      // Clamp to [0, 1]
+      normalizedValue = Math.max(0.0, Math.min(1.0, normalizedValue));
+
+      // Update JUCE parameter
+      sliderState.setNormalisedValue(normalizedValue);
+
+      // Update visual
+      updateKnobRotation(activeKnob, normalizedValue);
+
+      // Update display with denormalized value (0-10 range)
+      const displayValue = normalizedValue * 10.0;
+      const paramIdUpper = paramId.toUpperCase();
+      const display = document.getElementById('display');
+      display.textContent = `${paramIdUpper} ${displayValue.toFixed(1)}`;
+
+      // Reset display timeout (return to "INSANE" after 2 seconds)
+      clearTimeout(displayTimeout);
+      displayTimeout = setTimeout(() => {
+        display.textContent = 'INSANE';
+      }, 2000);
+
+      e.preventDefault();
+    });
+
+    // Mouse up - stop dragging
+    document.addEventListener('mouseup', () => {
+      activeKnob = null;
+    });
+
+    // Update knob rotation based on normalized value (0 to 1)
+    function updateKnobRotation(knob, normalizedValue) {
+      const degrees = -135 + (normalizedValue * 270);  // -135° to +135°
+      knob.style.transform = `rotate(${degrees}deg)`;
+    }
+
+    console.log('Spyder2000 UI loaded (production)');
+  </script>
+</body>
+</html>

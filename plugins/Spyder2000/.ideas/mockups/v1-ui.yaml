@@ -1,0 +1,138 @@
+# Spyder2000 UI Design Specification v1
+# Generated: 2025-11-17
+# Plugin: Spyder2000
+# Style: POD-inspired glossy red stompbox
+
+window:
+  width: 450
+  height: 300
+  resizable: false
+
+colors:
+  background: "#DC143C"  # Ferrari Red
+  background_gradient_start: "#FF1744"  # Lighter red for gloss
+  background_gradient_end: "#8B0000"  # Darker red for depth
+  knob_body: "#2a2a2a"  # Dark gray/black
+  knob_indicator: "#ffffff"  # White indicator line
+  text: "#ffffff"  # White text
+  text_shadow: "#000000"  # Black shadow for depth
+  display_bg: "#1a1a1a"  # Dark background for 7-segment
+  display_glow: "#FF4500"  # Orange-red LED glow
+  accent: "#FFD700"  # Gold for highlights
+
+typography:
+  plugin_name: "Arial Black, sans-serif"
+  labels: "Arial, sans-serif"
+  display: "monospace"
+  size:
+    plugin_name: "24px"
+    labels: "14px"
+    display: "20px"
+
+layout:
+  type: horizontal
+  sections:
+    - id: header
+      height: 60
+      controls: [plugin_name]
+    - id: knobs
+      y: 80
+      height: 120
+      controls: [gain_knob, tone_knob, level_knob]
+    - id: footer
+      y: 240
+      height: 50
+      controls: [display]
+
+controls:
+  - id: gain_knob
+    type: rotary-knob
+    label: "GAIN"
+    parameter: "gain"
+    range: [0.0, 10.0]
+    default: 5.0
+    decimals: 1
+    position: {x: 65, y: 80}
+    size: {width: 80, height: 80}
+    style: pod-rubber
+
+  - id: tone_knob
+    type: rotary-knob
+    label: "TONE"
+    parameter: "tone"
+    range: [0.0, 10.0]
+    default: 5.0
+    decimals: 1
+    position: {x: 185, y: 80}
+    size: {width: 80, height: 80}
+    style: pod-rubber
+
+  - id: level_knob
+    type: rotary-knob
+    label: "LEVEL"
+    parameter: "level"
+    range: [0.0, 10.0]
+    default: 8.0
+    decimals: 1
+    position: {x: 305, y: 80}
+    size: {width: 80, height: 80}
+    style: pod-rubber
+
+labels:
+  - id: plugin_name_label
+    text: "SPYDER 2000"
+    position: {x: 125, y: 25}
+    size: {width: 200, height: 30}
+    style: bold
+    color: "#ffffff"
+    shadow: true
+
+  - id: gain_label
+    text: "GAIN"
+    position: {x: 75, y: 170}
+    size: {width: 60, height: 20}
+    for: gain_knob
+
+  - id: tone_label
+    text: "TONE"
+    position: {x: 195, y: 170}
+    size: {width: 60, height: 20}
+    for: tone_knob
+
+  - id: level_label
+    text: "LEVEL"
+    position: {x: 315, y: 170}
+    size: {width: 60, height: 20}
+    for: level_knob
+
+special_elements:
+  - id: seven_segment_display
+    type: 7-segment-display
+    default_text: "INSANE"
+    position: {x: 155, y: 240}
+    size: {width: 140, height: 40}
+    style: led-red
+    glow_color: "#FF4500"
+    behavior: shows_parameter_values_on_change
+
+visual_effects:
+  - type: radial-gradient
+    target: background
+    center: {x: 225, y: 100}
+    colors: ["#FF1744", "#DC143C", "#8B0000"]
+    stops: [0, 0.5, 1.0]
+
+  - type: gloss-overlay
+    target: background
+    position: {x: 0, y: 0}
+    size: {width: 450, height: 150}
+    opacity: 0.3
+
+notes:
+  - All positions in pixels from top-left (0,0)
+  - Parameter IDs must match parameter-spec-draft.md
+  - POD-inspired rubber knobs with tactile feel
+  - Ferrari Red glossy finish with shine/gradient
+  - 7-segment display shows "INSANE" when idle
+  - Display updates to show parameter values during adjustment
+  - Returns to "INSANE" after 2 seconds of inactivity
