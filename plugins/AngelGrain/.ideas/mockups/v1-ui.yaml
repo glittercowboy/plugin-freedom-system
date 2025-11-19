@@ -1,0 +1,149 @@
+# v1 UI Design Specification
+# Generated: 2025-11-19
+# Plugin: AngelGrain (Granular Delay)
+
+window:
+  width: 540
+  height: 480
+  resizable: false
+
+colors:
+  background_gradient:
+    start: "#d8e0e8"
+    end: "#c8d0d8"
+  surface_gradient:
+    start: "#e8eef4"
+    end: "#dce4ec"
+  control: "#d0dce8"
+  control_shadow: "#c0ccd8"
+  accent: "#a8c8e8"
+  accent_glow: "#88b0d8"
+  text: "#5a6a7a"
+  text_secondary: "#6a7a8a"
+
+typography:
+  primary: "system-ui, -apple-system, sans-serif"
+  weight: 300
+  size:
+    label: "11px"
+    value: "10px"
+
+layout:
+  type: two-row-horizontal
+  rows:
+    - id: top_row
+      y: 80
+      controls: [delay_time, grain_size, feedback]
+    - id: bottom_row
+      y: 240
+      controls: [chaos, character, mix]
+  footer:
+    y: 410
+    controls: [tempo_sync]
+
+controls:
+  # Top Row - 3 knobs evenly spaced
+  - id: delay_time
+    type: knob
+    label: "DELAY"
+    parameter: "delay_time"
+    range: [0.0, 1000.0]
+    unit: "ms"
+    default: 250.0
+    decimals: 1
+    position: {x: 70, y: 80}
+    size: {diameter: 80}
+
+  - id: grain_size
+    type: knob
+    label: "GRAIN"
+    parameter: "grain_size"
+    range: [10.0, 500.0]
+    unit: "ms"
+    default: 100.0
+    decimals: 1
+    position: {x: 230, y: 80}
+    size: {diameter: 80}
+
+  - id: feedback
+    type: knob
+    label: "FEEDBACK"
+    parameter: "feedback"
+    range: [0.0, 100.0]
+    unit: "%"
+    default: 40.0
+    decimals: 0
+    position: {x: 390, y: 80}
+    size: {diameter: 80}
+
+  # Bottom Row - 3 knobs, character is focal point with glow
+  - id: chaos
+    type: knob
+    label: "CHAOS"
+    parameter: "chaos"
+    range: [0.0, 100.0]
+    unit: "%"
+    default: 25.0
+    decimals: 0
+    position: {x: 70, y: 240}
+    size: {diameter: 80}
+
+  - id: character
+    type: knob
+    label: "CHARACTER"
+    parameter: "character"
+    range: [0.0, 100.0]
+    unit: "%"
+    default: 50.0
+    decimals: 0
+    position: {x: 230, y: 240}
+    size: {diameter: 80}
+    special:
+      glow: true
+      glow_color: "#88b0d8"
+      focal_point: true
+
+  - id: mix
+    type: knob
+    label: "MIX"
+    parameter: "mix"
+    range: [0.0, 100.0]
+    unit: "%"
+    default: 50.0
+    decimals: 0
+    position: {x: 390, y: 240}
+    size: {diameter: 80}
+
+  # Footer - Toggle switch
+  - id: tempo_sync
+    type: toggle
+    label: "SYNC"
+    parameter: "tempo_sync"
+    parameter_type: bool
+    default: false
+    position: {x: 245, y: 410}
+    size: {width: 50, height: 26}
+
+styling:
+  neomorphic:
+    enabled: true
+    shadow_dark: "rgba(150, 160, 175, 0.5)"
+    shadow_light: "rgba(255, 255, 255, 0.8)"
+    shadow_offset: 6
+    shadow_blur: 12
+  knob:
+    indicator_style: "line"
+    indicator_color: "#5a6a7a"
+    rotation_range: 270
+  toggle:
+    style: "slide"
+    track_color: "#c0ccd8"
+    thumb_color: "#ffffff"
+    active_color: "#a8c8e8"
+
+notes:
+  - Neomorphic design with paired shadows (dark bottom-right, light top-left)
+  - Character knob has soft celestial blue glow for focal differentiation
+  - All knobs use 80px diameter for balanced proportions
+  - Toggle uses slide-style switch with neomorphic inset track
+  - Cool cream and soft blue palette creates ethereal/angelic feel

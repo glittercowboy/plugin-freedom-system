@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AngelGrain UI Mockup v1</title>
+
+  <style>
+    /* CRITICAL: WebView constraints */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      /* Native application feel */
+      user-select: none;
+      -webkit-user-select: none;
+      cursor: default;
+      overflow: hidden;
+
+      /* Center the preview frame */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a1a;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    /* Fixed-size preview frame */
+    .plugin-frame {
+      width: 540px;
+      height: 480px;
+      border: 2px solid #444;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      overflow: hidden;
+      position: relative;
+      border-radius: 12px;
+    }
+
+    /* Plugin container */
+    .container {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(145deg, #d8e0e8, #c8d0d8);
+      position: relative;
+    }
+
+    /* Plugin surface */
+    .plugin-surface {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      bottom: 20px;
+      background: linear-gradient(145deg, #e8eef4, #dce4ec);
+      border-radius: 16px;
+      box-shadow:
+        8px 8px 16px rgba(150, 160, 175, 0.5),
+        -8px -8px 16px rgba(255, 255, 255, 0.8);
+    }
+
+    /* Plugin title */
+    .plugin-title {
+      position: absolute;
+      top: 30px;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-size: 20px;
+      font-weight: 300;
+      letter-spacing: 4px;
+      color: #5a6a7a;
+      text-transform: uppercase;
+    }
+
+    /* Knob container */
+    .knob-group {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Top row positioning */
+    .knob-delay { left: 50px; top: 80px; }
+    .knob-grain { left: 210px; top: 80px; }
+    .knob-feedback { left: 370px; top: 80px; }
+
+    /* Bottom row positioning */
+    .knob-chaos { left: 50px; top: 240px; }
+    .knob-character { left: 210px; top: 240px; }
+    .knob-mix { left: 370px; top: 240px; }
+
+    /* Knob styles */
+    .knob {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #e8eef4, #d0dce8);
+      box-shadow:
+        6px 6px 12px rgba(150, 160, 175, 0.5),
+        -6px -6px 12px rgba(255, 255, 255, 0.8);
+      position: relative;
+      cursor: grab;
+      transition: transform 50ms ease;
+    }
+
+    .knob:active {
+      cursor: grabbing;
+      transform: scale(0.95);
+    }
+
+    /* Knob inner circle */
+    .knob-inner {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      right: 10px;
+      bottom: 10px;
+      border-radius: 50%;
+      background: linear-gradient(145deg, #dce4ec, #d0dce8);
+      box-shadow:
+        inset 2px 2px 4px rgba(150, 160, 175, 0.3),
+        inset -2px -2px 4px rgba(255, 255, 255, 0.5);
+    }
+
+    /* Knob indicator */
+    .knob-indicator {
+      position: absolute;
+      top: 8px;
+      left: 50%;
+      width: 3px;
+      height: 12px;
+      background: #5a6a7a;
+      border-radius: 2px;
+      transform: translateX(-50%);
+      transform-origin: center center;
+    }
+
+    /* Character knob glow effect */
+    .knob-character .knob {
+      box-shadow:
+        6px 6px 12px rgba(150, 160, 175, 0.5),
+        -6px -6px 12px rgba(255, 255, 255, 0.8),
+        0 0 20px rgba(136, 176, 216, 0.4),
+        0 0 40px rgba(136, 176, 216, 0.2);
+    }
+
+    /* Knob label */
+    .knob-label {
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      color: #5a6a7a;
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    /* Knob value display */
+    .knob-value {
+      font-size: 10px;
+      font-weight: 400;
+      color: #6a7a8a;
+    }
+
+    /* Toggle container */
+    .toggle-group {
+      position: absolute;
+      left: 225px;
+      top: 395px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Toggle switch */
+    .toggle {
+      width: 50px;
+      height: 26px;
+      border-radius: 13px;
+      background: linear-gradient(145deg, #d0dce8, #c0ccd8);
+      box-shadow:
+        inset 3px 3px 6px rgba(150, 160, 175, 0.4),
+        inset -3px -3px 6px rgba(255, 255, 255, 0.6);
+      position: relative;
+      cursor: pointer;
+      transition: background 200ms ease;
+    }
+
+    .toggle.active {
+      background: linear-gradient(145deg, #a8c8e8, #88b0d8);
+    }
+
+    /* Toggle thumb */
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow:
+        2px 2px 4px rgba(150, 160, 175, 0.4),
+        -1px -1px 2px rgba(255, 255, 255, 0.8);
+      transition: transform 200ms ease;
+    }
+
+    .toggle.active .toggle-thumb {
+      transform: translateX(24px);
+    }
+
+    /* Toggle label */
+    .toggle-label {
+      font-size: 11px;
+      font-weight: 300;
+      letter-spacing: 1px;
+      color: #5a6a7a;
+      text-transform: uppercase;
+    }
+
+    /* Debug parameter monitor */
+    .debug-monitor {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0, 0, 0, 0.85);
+      color: #0f0;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      padding: 8px 12px;
+      border: 1px solid #333;
+      border-radius: 4px;
+      min-width: 150px;
+      pointer-events: none;
+      z-index: 10000;
+    }
+
+    .debug-label {
+      color: #666;
+      font-size: 9px;
+      margin-bottom: 4px;
+      letter-spacing: 1px;
+    }
+
+    .debug-param {
+      font-weight: bold;
+      color: #0f0;
+    }
+
+    .debug-value {
+      color: #fff;
+      margin-top: 2px;
+    }
+
+    .debug-normalized {
+      color: #888;
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="plugin-frame">
+    <div class="container">
+      <div class="plugin-surface">
+        <div class="plugin-title">AngelGrain</div>
+
+        <!-- Top Row -->
+        <div class="knob-group knob-delay">
+          <div class="knob" id="delayTimeKnob" data-param="delay_time" data-min="0" data-max="1000" data-value="250">
+            <div class="knob-inner">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <div class="knob-label">DELAY</div>
+          <div class="knob-value" id="delayTimeValue">250.0 ms</div>
+        </div>
+
+        <div class="knob-group knob-grain">
+          <div class="knob" id="grainSizeKnob" data-param="grain_size" data-min="10" data-max="500" data-value="100">
+            <div class="knob-inner">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <div class="knob-label">GRAIN</div>
+          <div class="knob-value" id="grainSizeValue">100.0 ms</div>
+        </div>
+
+        <div class="knob-group knob-feedback">
+          <div class="knob" id="feedbackKnob" data-param="feedback" data-min="0" data-max="100" data-value="40">
+            <div class="knob-inner">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <div class="knob-label">FEEDBACK</div>
+          <div class="knob-value" id="feedbackValue">40%</div>
+        </div>
+
+        <!-- Bottom Row -->
+        <div class="knob-group knob-chaos">
+          <div class="knob" id="chaosKnob" data-param="chaos" data-min="0" data-max="100" data-value="25">
+            <div class="knob-inner">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <div class="knob-label">CHAOS</div>
+          <div class="knob-value" id="chaosValue">25%</div>
+        </div>
+
+        <div class="knob-group knob-character">
+          <div class="knob" id="characterKnob" data-param="character" data-min="0" data-max="100" data-value="50">
+            <div class="knob-inner">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <div class="knob-label">CHARACTER</div>
+          <div class="knob-value" id="characterValue">50%</div>
+        </div>
+
+        <div class="knob-group knob-mix">
+          <div class="knob" id="mixKnob" data-param="mix" data-min="0" data-max="100" data-value="50">
+            <div class="knob-inner">
+              <div class="knob-indicator"></div>
+            </div>
+          </div>
+          <div class="knob-label">MIX</div>
+          <div class="knob-value" id="mixValue">50%</div>
+        </div>
+
+        <!-- Toggle -->
+        <div class="toggle-group">
+          <div class="toggle" id="tempoSyncToggle">
+            <div class="toggle-thumb"></div>
+          </div>
+          <div class="toggle-label">SYNC</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Debug monitor -->
+  <div class="debug-monitor">
+    <div class="debug-label">PARAMETER MONITOR</div>
+    <div class="debug-param" id="debugParam">-</div>
+    <div class="debug-value" id="debugValue">-</div>
+    <div class="debug-normalized" id="debugNormalized">-</div>
+  </div>
+
+  <script>
+    // Mock JUCE backend for browser testing
+    window.Juce = {
+      getSliderState: (id) => ({
+        normalisedValue: 0.5,
+        valueChangedEvent: {
+          addListener: (fn) => console.log(`Listener added for ${id}`)
+        },
+        setNormalisedValue: (v) => console.log(`${id} set to ${v}`)
+      }),
+      getToggleState: (id) => ({
+        value: false,
+        valueChangedEvent: {
+          addListener: (fn) => console.log(`Listener added for ${id}`)
+        }
+      })
+    };
+
+    // Disable context menu (REQUIRED for WebView)
+    document.addEventListener("contextmenu", (e) => {
+      e.preventDefault();
+      return false;
+    });
+
+    // Disable drag (REQUIRED for WebView)
+    document.addEventListener("dragstart", (e) => {
+      e.preventDefault();
+    });
+
+    // Debug monitor update
+    function updateDebugMonitor(paramId, value, normalizedValue, unit) {
+      document.getElementById('debugParam').textContent = paramId;
+      document.getElementById('debugValue').textContent = `${value}${unit}`;
+      document.getElementById('debugNormalized').textContent = `${(normalizedValue * 100).toFixed(1)}%`;
+    }
+
+    // Knob interaction
+    document.addEventListener("DOMContentLoaded", () => {
+      const knobs = document.querySelectorAll('.knob');
+
+      knobs.forEach(knob => {
+        const paramId = knob.dataset.param;
+        const min = parseFloat(knob.dataset.min);
+        const max = parseFloat(knob.dataset.max);
+        let value = parseFloat(knob.dataset.value);
+        let isDragging = false;
+        let startY = 0;
+        let startValue = 0;
+
+        const indicator = knob.querySelector('.knob-indicator');
+        const valueDisplay = document.getElementById(`${paramId.replace(/_/g, '')}Value`) ||
+                            document.getElementById(`${toCamelCase(paramId)}Value`);
+
+        // Initial rotation
+        updateKnobVisual();
+
+        function updateKnobVisual() {
+          const normalized = (value - min) / (max - min);
+          const degrees = -135 + (normalized * 270);
+          knob.style.transform = `rotate(${degrees}deg)`;
+
+          // Update value display
+          if (valueDisplay) {
+            let displayValue;
+            let unit = '';
+
+            if (paramId === 'delay_time' || paramId === 'grain_size') {
+              displayValue = value.toFixed(1);
+              unit = ' ms';
+            } else {
+              displayValue = Math.round(value);
+              unit = '%';
+            }
+
+            valueDisplay.textContent = displayValue + unit;
+          }
+        }
+
+        // Mouse events for knob dragging
+        knob.addEventListener('mousedown', (e) => {
+          isDragging = true;
+          startY = e.clientY;
+          startValue = value;
+          e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+          if (!isDragging) return;
+
+          const deltaY = startY - e.clientY;
+          const range = max - min;
+          const sensitivity = range / 200;
+
+          value = Math.max(min, Math.min(max, startValue + (deltaY * sensitivity)));
+
+          updateKnobVisual();
+
+          // Update debug monitor
+          const normalized = (value - min) / (max - min);
+          let unit = paramId === 'delay_time' || paramId === 'grain_size' ? ' ms' : '%';
+          updateDebugMonitor(paramId, value.toFixed(1), normalized, unit);
+        });
+
+        document.addEventListener('mouseup', () => {
+          isDragging = false;
+        });
+
+        // Scroll wheel support
+        knob.addEventListener('wheel', (e) => {
+          e.preventDefault();
+          const range = max - min;
+          const step = range / 100;
+          const delta = e.deltaY > 0 ? -step : step;
+
+          value = Math.max(min, Math.min(max, value + delta));
+          updateKnobVisual();
+
+          const normalized = (value - min) / (max - min);
+          let unit = paramId === 'delay_time' || paramId === 'grain_size' ? ' ms' : '%';
+          updateDebugMonitor(paramId, value.toFixed(1), normalized, unit);
+        });
+      });
+
+      // Toggle interaction
+      const toggle = document.getElementById('tempoSyncToggle');
+      let isActive = false;
+
+      toggle.addEventListener('click', () => {
+        isActive = !isActive;
+        toggle.classList.toggle('active', isActive);
+        updateDebugMonitor('tempo_sync', isActive ? 'ON' : 'OFF', isActive ? 1 : 0, '');
+        console.log(`tempo_sync: ${isActive}`);
+      });
+    });
+
+    // Helper to convert snake_case to camelCase
+    function toCamelCase(str) {
+      return str.replace(/_([a-z])/g, (g) => g[1].toUpperCase());
+    }
+  </script>
+</body>
+</html>
